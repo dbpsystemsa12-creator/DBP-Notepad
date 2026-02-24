@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DBP Systems | Studio Workspace Ultra</title>
+    <title>DBP Systems | Studio Apex</title>
     <style>
         /* =========================================
            ROOT VARIABLES & MASTER RESET
            ========================================= */
         :root {
             --bg-master: linear-gradient(357deg, #000000, #1c1c1c);
-            --panel-bg: rgba(15, 15, 18, 0.6);
-            --toolbar-bg: rgba(10, 10, 12, 0.8);
-            --border-color: rgba(255, 255, 255, 0.08);
+            --panel-bg: rgba(15, 15, 18, 0.7);
+            --toolbar-bg: rgba(10, 10, 12, 0.9);
+            --border-color: rgba(255, 255, 255, 0.1);
             --accent-main: #00d2ff;
             --accent-glow: rgba(0, 210, 255, 0.4);
             --text-primary: #f8fafc;
@@ -22,228 +22,599 @@
             --warning: #ffa502;
             --font-mono: 'Fira Code', 'JetBrains Mono', Consolas, monospace;
             --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            --sidebar-width: 280px;
+            --sidebar-width: 260px;
+            --editor-font-size: 14px;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
 
         body {
-            background: var(--bg-master);
-            color: var(--text-primary);
+            background: var(--bg-master); 
+            color: var(--text-primary); 
             font-family: var(--font-sans);
-            height: 100vh; display: flex; overflow: hidden;
+            height: 100vh; 
+            display: flex; 
+            overflow: hidden; 
             backdrop-filter: blur(20px);
         }
 
         /* =========================================
-           RESIZABLE SIDEBAR
+           SIDEBAR & FILE EXPLORER
            ========================================= */
-        #sidebar-container {
-            display: flex; height: 100%; z-index: 10;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        #sidebar-container.hidden { transform: translateX(-100%); position: absolute; }
-
-        #sidebar {
-            width: var(--sidebar-width); min-width: 200px; max-width: 600px;
-            background: var(--panel-bg); border-right: 1px solid var(--border-color);
-            display: flex; flex-direction: column; backdrop-filter: blur(10px);
+        #sidebar-container { 
+            display: flex; 
+            height: 100%; 
+            z-index: 20; 
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
         }
 
-        .resizer {
-            width: 5px; background: transparent; cursor: col-resize; z-index: 100;
-            transition: background 0.2s;
+        #sidebar-container.hidden { 
+            transform: translateX(-100%); 
+            position: absolute; 
         }
-        .resizer:hover, .resizer.active { background: var(--accent-main); box-shadow: 0 0 10px var(--accent-glow); }
 
-        .sidebar-header { padding: 20px 15px 15px; border-bottom: 1px solid var(--border-color); }
-        .brand { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
-        .brand h1 { font-size: 1.1rem; font-weight: 800; letter-spacing: 1px; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
-        .brand span { color: var(--accent-main); }
-
-        .btn-new {
-            background: rgba(0, 210, 255, 0.1); color: var(--accent-main);
-            border: 1px solid rgba(0, 210, 255, 0.3); padding: 6px 12px;
-            border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+        #sidebar { 
+            width: var(--sidebar-width); 
+            min-width: 200px; 
+            max-width: 500px; 
+            background: var(--panel-bg); 
+            border-right: 1px solid var(--border-color); 
+            display: flex; 
+            flex-direction: column; 
+            backdrop-filter: blur(15px); 
         }
-        .btn-new:hover { background: var(--accent-main); color: #000; box-shadow: 0 0 15px var(--accent-glow); }
-
-        .search-wrapper { position: relative; }
-        .search-box {
-            width: 100%; padding: 8px 12px 8px 30px; background: rgba(0,0,0,0.4);
-            border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);
-            font-size: 0.85rem; outline: none; transition: 0.2s;
-        }
-        .search-box:focus { border-color: var(--accent-main); box-shadow: 0 0 0 2px rgba(0, 210, 255, 0.1); }
-        .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 0.9rem; color: var(--text-secondary); }
-
-        #notes-list { flex-grow: 1; overflow-y: auto; padding: 10px; }
-
-        .note-card {
-            border-radius: 6px; padding: 10px 12px; margin-bottom: 4px;
-            cursor: pointer; display: flex; gap: 12px; align-items: center;
-            transition: all 0.2s ease; border: 1px solid transparent; position: relative;
-        }
-        .note-card:hover { background: rgba(255,255,255,0.04); }
-        .note-card.active { background: rgba(0, 210, 255, 0.08); border-color: rgba(0, 210, 255, 0.2); }
         
-        .note-icon { font-size: 1.3rem; display: flex; align-items: center; justify-content: center; }
-        .note-info { overflow: hidden; flex-grow: 1; }
-        .note-info h3 { font-size: 0.85rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #e2e8f0; }
-        .note-info p { font-size: 0.7rem; color: var(--text-secondary); margin-top: 4px; font-family: var(--font-mono); }
-        
-        /* Language Colors & Expanded Dictionary */
-        .ext-html { color: #2ed573; text-shadow: 0 0 5px rgba(46, 213, 115, 0.4); } /* Vibrant Green as requested */
-        .ext-css { color: #264de4; }
-        .ext-js { color: #f7df1e; }
-        .ext-json { color: #00d2ff; }
-        .ext-md { color: #9c88ff; }
-        .ext-txt { color: #95afc0; }
-        .ext-ino { color: #00979D; } /* Arduino */
-        .ext-cpp { color: #00599C; } /* C++ / Headers */
-        .ext-py { color: #fbc531; }
-        .ext-img { color: #e84393; }
-        .ext-default { color: #718093; }
+        .resizer { 
+            width: 4px; 
+            background: transparent; 
+            cursor: col-resize; 
+            z-index: 100; 
+            transition: background 0.2s; 
+        }
+
+        .resizer:hover, .resizer.active { 
+            background: var(--accent-main); 
+            box-shadow: 0 0 10px var(--accent-glow); 
+        }
+
+        .sidebar-header { 
+            padding: 20px 15px 15px; 
+            border-bottom: 1px solid var(--border-color); 
+        }
+
+        .brand { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            margin-bottom: 15px; 
+        }
+
+        .brand h1 { 
+            font-size: 1.1rem; 
+            font-weight: 800; 
+            letter-spacing: 1px; 
+            color: #fff; 
+        }
+
+        .brand span { 
+            color: var(--accent-main); 
+        }
+
+        .search-box { 
+            width: 100%; 
+            padding: 8px 12px; 
+            background: rgba(0,0,0,0.5); 
+            border: 1px solid var(--border-color); 
+            border-radius: 6px; 
+            color: var(--text-primary); 
+            font-size: 0.85rem; 
+            outline: none; 
+            transition: 0.2s; 
+        }
+
+        .search-box:focus { 
+            border-color: var(--accent-main); 
+        }
+
+        .sidebar-actions { 
+            display: flex; 
+            gap: 5px; 
+            margin-top: 10px; 
+        }
+
+        .sidebar-btn { 
+            flex: 1; 
+            background: rgba(255,255,255,0.05); 
+            border: 1px solid var(--border-color); 
+            color: var(--text-secondary); 
+            padding: 5px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 0.8rem; 
+            transition: 0.2s; 
+        }
+
+        .sidebar-btn:hover { 
+            background: rgba(255,255,255,0.1); 
+            color: #fff; 
+        }
+
+        .sidebar-btn.primary { 
+            color: var(--accent-main); 
+            border-color: rgba(0,210,255,0.3); 
+        }
+
+        .sidebar-btn.primary:hover { 
+            background: var(--accent-main); 
+            color: #000; 
+        }
+
+        #notes-list { 
+            flex-grow: 1; 
+            overflow-y: auto; 
+            padding: 10px; 
+        }
+
+        .note-card { 
+            border-radius: 6px; 
+            padding: 8px 12px; 
+            margin-bottom: 4px; 
+            cursor: pointer; 
+            display: flex; 
+            gap: 10px; 
+            align-items: center; 
+            transition: all 0.2s; 
+            border: 1px solid transparent; 
+        }
+
+        .note-card:hover { 
+            background: rgba(255,255,255,0.05); 
+        }
+
+        .note-card.active { 
+            background: rgba(0, 210, 255, 0.08); 
+            border-color: rgba(0, 210, 255, 0.4); 
+            border-left: 3px solid var(--accent-main);
+        }
+
+        .note-icon { 
+            font-size: 1.3rem; 
+        }
+
+        .note-info { 
+            overflow: hidden; 
+            flex-grow: 1; 
+        }
+
+        .note-info h3 { 
+            font-size: 0.85rem; 
+            font-weight: 500; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            color: #e2e8f0; 
+            transition: color 0.2s;
+        }
+
+        .note-info p { 
+            font-size: 0.65rem; 
+            color: var(--text-secondary); 
+            margin-top: 2px; 
+        }
 
         /* =========================================
-           MAIN WORKSPACE & MODERN TOOLBAR
+           CUSTOM ICON & TEXT COLORS
            ========================================= */
-        #workspace { flex-grow: 1; display: flex; flex-direction: column; position: relative; min-width: 0; background: rgba(5,5,5,0.3); }
-
-        .tabs { display: flex; background: var(--toolbar-bg); border-bottom: 1px solid var(--border-color); padding-top: 5px; }
-        .tab { 
-            padding: 10px 25px; color: var(--text-secondary); cursor: pointer;
-            border-top-left-radius: 8px; border-top-right-radius: 8px;
-            font-size: 0.85rem; font-weight: 500; user-select: none; transition: 0.2s;
-            background: transparent; border-bottom: 2px solid transparent;
-            margin-left: 5px;
+        .ext-html { 
+            color: #2ed573; 
+            text-shadow: 0 0 8px rgba(46, 213, 115, 0.6); 
         }
-        .tab:hover { color: var(--text-primary); background: rgba(255,255,255,0.03); }
-        .tab.active { color: var(--accent-main); background: rgba(0, 210, 255, 0.05); border-bottom-color: var(--accent-main); }
-        
-        .toggle-sidebar { margin-left: auto; background: transparent; color: var(--text-secondary); border: none; cursor: pointer; padding: 0 15px; font-size: 1.2rem; }
-        .toggle-sidebar:hover { color: #fff; }
+        .text-html {
+            color: #2ed573 !important;
+            font-weight: bold !important;
+            text-shadow: 0 0 5px rgba(46, 213, 115, 0.3);
+        }
+        .ext-css { color: #3498db; } 
+        .ext-js { color: #f1c40f; } 
+        .ext-json { color: #00d2ff; } 
+        .ext-md { color: #9b59b6; } 
+        .ext-ino { color: #00979D; } 
+        .ext-py { color: #e67e22; }
+
+        /* =========================================
+           MAIN WORKSPACE & TOOLBAR
+           ========================================= */
+        #workspace { 
+            flex-grow: 1; 
+            display: flex; 
+            flex-direction: column; 
+            min-width: 0; 
+            background: rgba(0,0,0,0.4); 
+        }
+
+        .tabs { 
+            display: flex; 
+            background: var(--toolbar-bg); 
+            border-bottom: 1px solid var(--border-color); 
+            padding-top: 5px; 
+        }
+
+        .tab { 
+            padding: 10px 20px; 
+            color: var(--text-secondary); 
+            cursor: pointer; 
+            border-radius: 6px 6px 0 0; 
+            font-size: 0.85rem; 
+            user-select: none; 
+            margin-left: 5px; 
+            border-bottom: 2px solid transparent; 
+        }
+
+        .tab:hover { 
+            color: var(--text-primary); 
+            background: rgba(255,255,255,0.03); 
+        }
+
+        .tab.active { 
+            color: var(--accent-main); 
+            background: rgba(0, 210, 255, 0.05); 
+            border-bottom-color: var(--accent-main); 
+        }
+
+        .toggle-sidebar { 
+            margin-left: auto; 
+            background: transparent; 
+            color: var(--text-secondary); 
+            border: none; 
+            cursor: pointer; 
+            padding: 0 15px; 
+            font-size: 1.2rem; 
+        }
 
         .toolbar { 
-            padding: 8px 15px; background: rgba(15,15,18,0.8); border-bottom: 1px solid var(--border-color);
-            display: flex; align-items: center; gap: 6px;
+            padding: 8px 15px; 
+            background: rgba(15,15,18,0.8); 
+            border-bottom: 1px solid var(--border-color); 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
         }
 
-        .filename-input {
-            background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); color: var(--accent-main);
-            padding: 6px 12px; border-radius: 4px; font-family: var(--font-mono); font-size: 0.9rem; width: 220px; outline: none; font-weight: bold;
+        .filename-input { 
+            background: rgba(0,0,0,0.5); 
+            border: 1px solid var(--border-color); 
+            color: var(--accent-main); 
+            padding: 6px 12px; 
+            border-radius: 4px; 
+            font-family: var(--font-mono); 
+            font-size: 0.9rem; 
+            width: 200px; 
+            outline: none; 
+            font-weight: bold; 
         }
-        .filename-input:focus { border-color: var(--accent-main); background: #000; }
-        .unsaved-dot { height: 8px; width: 8px; background: var(--danger); border-radius: 50%; margin-left: 8px; display: none; box-shadow: 0 0 8px var(--danger); }
 
-        .divider { width: 1px; height: 18px; background: var(--border-color); margin: 0 5px; }
+        .filename-input:focus { 
+            border-color: var(--accent-main); 
+        }
 
-        /* CSS Tooltip Engine */
+        .unsaved-dot { 
+            height: 8px; 
+            width: 8px; 
+            background: var(--danger); 
+            border-radius: 50%; 
+            margin-left: 8px; 
+            display: none; 
+            box-shadow: 0 0 8px var(--danger); 
+        }
+
+        .divider { 
+            width: 1px; 
+            height: 18px; 
+            background: var(--border-color); 
+            margin: 0 5px; 
+        }
+
         .icon-btn { 
-            background: transparent; color: var(--text-secondary); border: none; border-radius: 4px;
-            height: 32px; width: 32px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; font-size: 1.1rem; transition: 0.2s; position: relative;
+            background: transparent; 
+            color: var(--text-secondary); 
+            border: none; 
+            border-radius: 4px; 
+            height: 32px; 
+            width: 32px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            font-size: 1.1rem; 
+            transition: 0.2s; 
+            position: relative; 
         }
-        .icon-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
-        .icon-btn.danger:hover { background: rgba(255, 71, 87, 0.15); color: var(--danger); }
-        .icon-btn.primary { color: var(--accent-main); }
-        .icon-btn.primary:hover { background: rgba(0, 210, 255, 0.15); }
 
-        .icon-btn::after {
-            content: attr(data-tooltip); position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%) scale(0.9);
-            background: #000; color: #fff; font-size: 0.75rem; padding: 4px 8px; border-radius: 4px;
-            white-space: nowrap; opacity: 0; pointer-events: none; transition: 0.2s; z-index: 100;
-            border: 1px solid var(--border-color); font-family: var(--font-sans);
+        .icon-btn:hover { 
+            background: rgba(255,255,255,0.1); 
+            color: var(--text-primary); 
         }
-        .icon-btn:hover::after { opacity: 1; transform: translateX(-50%) scale(1); }
+
+        .icon-btn.danger:hover { 
+            background: rgba(255, 71, 87, 0.15); 
+            color: var(--danger); 
+        }
+
+        .icon-btn.primary { 
+            color: var(--accent-main); 
+        }
+
+        .icon-btn.primary:hover { 
+            background: rgba(0, 210, 255, 0.15); 
+        }
+
+        .icon-btn.active { 
+            background: rgba(0, 210, 255, 0.2); 
+            color: var(--accent-main); 
+        }
+
+        .icon-btn::after { 
+            content: attr(data-tooltip); 
+            position: absolute; 
+            bottom: -30px; 
+            left: 50%; 
+            transform: translateX(-50%) scale(0.9); 
+            background: #000; 
+            color: #fff; 
+            font-size: 0.75rem; 
+            padding: 4px 8px; 
+            border-radius: 4px; 
+            white-space: nowrap; 
+            opacity: 0; 
+            pointer-events: none; 
+            transition: 0.2s; 
+            z-index: 100; 
+            border: 1px solid var(--border-color); 
+        }
+
+        .icon-btn:hover::after { 
+            opacity: 1; 
+            transform: translateX(-50%) scale(1); 
+        }
 
         /* =========================================
-           EDITOR & LINE NUMBERS
+           SPLIT VIEW & EDITOR
            ========================================= */
-        .editor-container { flex-grow: 1; display: flex; position: relative; overflow: hidden; background: transparent; }
-
-        .line-numbers {
-            width: 50px; min-width: 50px; background: rgba(0,0,0,0.3); border-right: 1px solid var(--border-color);
-            padding: 20px 0; text-align: right; color: #475569; font-family: var(--font-mono); font-size: 14px; line-height: 1.6; user-select: none; overflow: hidden;
+        .workspace-core { 
+            flex-grow: 1; 
+            display: flex; 
+            overflow: hidden; 
+            flex-direction: column; 
         }
-        .line-numbers span { display: block; padding-right: 12px; }
-        .line-numbers span.active-line { color: var(--text-secondary); background: rgba(255,255,255,0.05); border-right: 2px solid var(--accent-main); padding-right: 10px; }
 
-        #editor {
-            flex-grow: 1; width: 100%; padding: 20px; font-size: 14px; line-height: 1.6; color: #e2e8f0;
-            background: transparent; border: none; outline: none; resize: none; overflow-y: auto; 
-            font-family: var(--font-mono); white-space: pre; tab-size: 4;
+        .split-container { 
+            flex-grow: 1; 
+            display: flex; 
+            overflow: hidden; 
         }
-        #editor::selection { background: rgba(0, 210, 255, 0.3); }
+        
+        .editor-wrapper, .preview-wrapper { 
+            display: flex; 
+            flex-grow: 1; 
+            position: relative; 
+            width: 100%; 
+        }
 
-        #preview-frame { display: none; width: 100%; height: 100%; border: none; background: #fff; }
-        #preview-text { display: none; width: 100%; height: 100%; padding: 30px; overflow-y: auto; background: #0b0f19; line-height: 1.6; }
+        .preview-wrapper { 
+            display: none; 
+            background: #fff; 
+        }
+        
+        /* Split Mode Active */
+        .split-mode .editor-wrapper { 
+            width: 50%; 
+            border-right: 1px solid var(--border-color); 
+        }
+
+        .split-mode .preview-wrapper { 
+            width: 50%; 
+            display: flex; 
+        }
+
+        .line-numbers { 
+            width: 50px; 
+            min-width: 50px; 
+            background: rgba(0,0,0,0.3); 
+            border-right: 1px solid var(--border-color); 
+            padding: 20px 0; 
+            text-align: right; 
+            color: #475569; 
+            font-family: var(--font-mono); 
+            font-size: var(--editor-font-size); 
+            line-height: 1.6; 
+            user-select: none; 
+            overflow: hidden; 
+        }
+
+        .line-numbers span { 
+            display: block; 
+            padding-right: 12px; 
+        }
+
+        .line-numbers span.active-line { 
+            color: #fff; 
+            background: rgba(255,255,255,0.05); 
+            border-right: 2px solid var(--accent-main); 
+        }
+
+        #editor { 
+            flex-grow: 1; 
+            padding: 20px; 
+            font-size: var(--editor-font-size); 
+            line-height: 1.6; 
+            color: #e2e8f0; 
+            background: transparent; 
+            border: none; 
+            outline: none; 
+            resize: none; 
+            overflow-y: auto; 
+            font-family: var(--font-mono); 
+            white-space: pre; 
+            tab-size: 4; 
+        }
+
+        #preview-frame { 
+            width: 100%; 
+            height: 100%; 
+            border: none; 
+            background: #fff; 
+        }
+
+        #preview-text { 
+            display: none; 
+            width: 100%; 
+            height: 100%; 
+            padding: 30px; 
+            overflow-y: auto; 
+            background: #0b0f19; 
+            line-height: 1.6; 
+            color: #fff; 
+            font-size: var(--editor-font-size);
+        }
 
         /* =========================================
-           COMMAND PALETTE (Ctrl+P)
+           TERMINAL / CONSOLE
            ========================================= */
-        #cmd-palette {
-            display: none; position: fixed; top: 15%; left: 50%; transform: translateX(-50%);
-            width: 500px; background: rgba(15, 15, 20, 0.95); border: 1px solid var(--border-color);
-            border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); z-index: 200; backdrop-filter: blur(15px);
-            animation: dropDown 0.15s ease-out; flex-direction: column; overflow: hidden;
+        #terminal-panel { 
+            height: 150px; 
+            border-top: 1px solid var(--border-color); 
+            background: #0a0a0c; 
+            display: none; 
+            flex-direction: column; 
         }
-        #cmd-input {
-            width: 100%; padding: 15px 20px; background: transparent; border: none; border-bottom: 1px solid var(--border-color);
-            color: #fff; font-size: 1.1rem; outline: none; font-family: var(--font-sans);
-        }
-        #cmd-results { max-height: 300px; overflow-y: auto; }
-        .cmd-item { padding: 10px 20px; color: var(--text-secondary); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .cmd-item:hover, .cmd-item.selected { background: var(--accent-main); color: #000; }
-        .cmd-item span.badge { font-size: 0.7rem; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; }
 
-        @keyframes dropDown { from { transform: translate(-50%, -20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+        .terminal-header { 
+            padding: 4px 10px; 
+            background: rgba(255,255,255,0.05); 
+            border-bottom: 1px solid var(--border-color); 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 0.75rem; 
+            font-family: var(--font-mono); 
+            color: var(--text-secondary); 
+        }
+
+        .terminal-output { 
+            flex-grow: 1; 
+            padding: 10px; 
+            overflow-y: auto; 
+            font-family: var(--font-mono); 
+            font-size: calc(var(--editor-font-size) - 2px); 
+        }
+
+        .log-line { 
+            border-bottom: 1px solid rgba(255,255,255,0.05); 
+            padding: 3px 0; 
+        }
+
+        .log-error { color: var(--danger); background: rgba(255,71,87,0.1); }
+        .log-warn { color: var(--warning); }
+        .log-info { color: var(--accent-main); }
+        .terminal-clear { cursor: pointer; color: var(--text-secondary); } 
+        .terminal-clear:hover { color: #fff; }
 
         /* =========================================
            STATUS BAR
            ========================================= */
         .status-bar { 
-            background: var(--toolbar-bg); border-top: 1px solid var(--border-color); padding: 4px 15px; 
-            display: flex; justify-content: space-between; font-size: 0.75rem; color: #64748b; font-family: var(--font-mono); 
+            background: var(--toolbar-bg); 
+            border-top: 1px solid var(--border-color); 
+            padding: 4px 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 0.75rem; 
+            color: #64748b; 
+            font-family: var(--font-mono); 
         }
-        .status-left span, .status-right span { margin-right: 15px; display: inline-flex; align-items: center; gap: 5px; }
+
+        .status-left span, .status-right span { margin-right: 15px; } 
         .status-right span { margin-left: 15px; margin-right: 0; }
-        .status-btn { cursor: pointer; transition: 0.2s; }
-        .status-btn:hover { color: var(--text-primary); }
-        .dbp-tag { color: #fff; font-weight: bold; background: var(--accent-main); color: #000; padding: 1px 8px; border-radius: 4px; letter-spacing: 0.5px; }
 
-        /* Custom Scrollbars */
-        ::-webkit-scrollbar { width: 12px; height: 12px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border: 3px solid rgba(15,15,18,1); border-radius: 6px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+        .dbp-tag { 
+            color: #000; 
+            font-weight: bold; 
+            background: var(--accent-main); 
+            padding: 1px 8px; 
+            border-radius: 4px; 
+        }
 
-        /* Modals */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 300; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .modal { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 25px; width: 350px; box-shadow: 0 10px 40px rgba(0,0,0,0.9); }
-        .modal h2 { color: #fff; margin-bottom: 10px; font-size: 1.1rem; }
-        .modal p { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px; }
-        .modal-input { width: 100%; padding: 8px; margin-bottom: 10px; background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); color: #fff; border-radius: 4px; outline: none; }
-        .modal-actions { display: flex; gap: 10px; }
-        .modal-btn { flex: 1; padding: 8px; border-radius: 4px; border: none; cursor: pointer; font-weight: 600; }
-        .btn-cancel { background: rgba(255,255,255,0.1); color: #fff; }
-        .btn-confirm { background: var(--accent-main); color: #000; }
+        /* =========================================
+           MODALS, ALERTS & SCROLLBARS
+           ========================================= */
+        ::-webkit-scrollbar { width: 10px; height: 10px; } 
+        ::-webkit-scrollbar-track { background: transparent; } 
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 5px; }
+
+        .cmd-palette { 
+            display: none; position: fixed; top: 15%; left: 50%; transform: translateX(-50%); 
+            width: 500px; background: rgba(15,15,20,0.95); border: 1px solid var(--border-color); 
+            border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.9); z-index: 200; flex-direction: column; 
+        }
+        .cmd-input { width: 100%; padding: 15px; background: transparent; border: none; border-bottom: 1px solid var(--border-color); color: #fff; outline: none; font-family: var(--font-sans); }
+        .cmd-results { max-height: 300px; overflow-y: auto; } 
+        .cmd-item { padding: 10px 15px; color: var(--text-secondary); cursor: pointer; display: flex; justify-content: space-between; } 
+        .cmd-item:hover { background: var(--accent-main); color: #000; }
+
+        /* Custom JavaScript Modal Alerts */
+        .dialog-overlay { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 1000; 
+            justify-content: center; align-items: center; 
+        }
+        .dialog-box { 
+            background: var(--panel-bg); border: 1px solid var(--border-color); 
+            border-radius: 8px; padding: 25px; width: 350px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8); text-align: center; font-family: var(--font-sans); 
+        }
+        .dialog-box h3 { margin-bottom: 10px; color: #fff; font-size: 1.2rem; }
+        .dialog-box p { margin-bottom: 20px; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5; }
+        .dialog-actions { display: flex; justify-content: center; gap: 15px; }
+        .dialog-btn { padding: 8px 20px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .cancel-btn { background: rgba(255,255,255,0.1); color: #fff; }
+        .cancel-btn:hover { background: rgba(255,255,255,0.2); }
+        .confirm-btn { background: var(--accent-main); color: #000; }
+        .confirm-btn:hover { background: var(--accent-glow); color: #fff; }
     </style>
 </head>
 <body>
 
-    <div id="cmd-palette">
-        <input type="text" id="cmd-input" placeholder="Search files or type '>' for commands..." autocomplete="off">
-        <div id="cmd-results"></div>
+    <div id="custom-dialog-overlay" class="dialog-overlay">
+        <div class="dialog-box">
+            <h3 id="dialog-title">Notice</h3>
+            <p id="dialog-message"></p>
+            <div class="dialog-actions">
+                <button id="dialog-btn-cancel" class="dialog-btn cancel-btn">Cancel</button>
+                <button id="dialog-btn-confirm" class="dialog-btn confirm-btn">OK</button>
+            </div>
+        </div>
     </div>
+
+    <div id="cmd-palette" class="cmd-palette">
+        <input type="text" id="cmd-input" class="cmd-input" placeholder="Search or type '>' for commands...">
+        <div id="cmd-results" class="cmd-results"></div>
+    </div>
+
+    <input type="file" id="file-import" style="display:none" accept="*/*">
+    <input type="file" id="file-restore" style="display:none" accept=".dbp,.json">
 
     <div id="sidebar-container">
         <aside id="sidebar">
             <div class="sidebar-header">
-                <div class="brand"><h1>DBP <span>Studio</span></h1><button class="btn-new" id="btn-new">+ New</button></div>
-                <div class="search-wrapper">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="search-input" class="search-box" placeholder="Explorer...">
+                <div class="brand"><h1>DBP <span>Apex</span></h1></div>
+                <input type="text" id="search-input" class="search-box" placeholder="Search Explorer...">
+                <div class="sidebar-actions">
+                    <button class="sidebar-btn primary" id="btn-new">+ New File</button>
+                    <button class="sidebar-btn" id="btn-backup" title="Backup Entire Workspace">📦 Export DB</button>
+                    <button class="sidebar-btn" id="btn-restore" title="Restore Workspace">📥 Load DB</button>
                 </div>
             </div>
             <div id="notes-list"></div>
@@ -254,283 +625,509 @@
     <main id="workspace">
         <div class="tabs">
             <div class="tab active" id="tab-editor">Editor</div>
-            <div class="tab" id="tab-preview">Live Preview</div>
+            <div class="tab" id="tab-preview">Preview</div>
             <button class="toggle-sidebar" id="btn-toggle-sidebar" title="Toggle Sidebar">🗂️</button>
         </div>
 
         <div class="toolbar">
-            <input type="text" id="filename-input" class="filename-input" placeholder="untitled.txt">
+            <input type="text" id="filename-input" class="filename-input" placeholder="untitled.html">
             <div class="unsaved-dot" id="unsaved-indicator"></div>
-            
             <div class="divider"></div>
             
             <button class="icon-btn primary" id="btn-launch" data-tooltip="Launch in Browser">🚀</button>
-            <button class="icon-btn" id="btn-save" data-tooltip="Save (Ctrl+S)">💾</button>
-            <button class="icon-btn" id="btn-export" data-tooltip="Download File">📥</button>
-            <button class="icon-btn danger" id="btn-delete" data-tooltip="Delete File">🗑️</button>
+            <button class="icon-btn" id="btn-import" data-tooltip="Open Local File">📂</button>
+            <button class="icon-btn" id="btn-save" data-tooltip="Save to Database (Ctrl+S)">💾</button>
+            <button class="icon-btn" id="btn-export" data-tooltip="Download as Single File">📥</button>
+            <button class="icon-btn danger" id="btn-delete" data-tooltip="Permanently Delete File">🗑️</button>
             
             <div class="divider"></div>
-            
-            <button class="icon-btn" id="btn-boilerplate" data-tooltip="Insert HTML Boilerplate">⚡</button>
-            <button class="icon-btn" id="btn-find" data-tooltip="Find & Replace (Ctrl+F)">🔍</button>
+            <button class="icon-btn" id="btn-split" data-tooltip="Split Screen Mode">◨</button>
+            <button class="icon-btn" id="btn-console" data-tooltip="Toggle Terminal">📟</button>
             <button class="icon-btn" id="btn-wrap" data-tooltip="Toggle Word Wrap">🔄</button>
             <button class="icon-btn" id="btn-palette" data-tooltip="Command Palette (Ctrl+P)">⌨️</button>
-            
-            <div style="flex-grow: 1;"></div>
-            
-            <button class="icon-btn" id="btn-zoom-out" data-tooltip="Zoom Out">A-</button>
-            <button class="icon-btn" id="btn-zoom-in" data-tooltip="Zoom In">A+</button>
+
+            <div class="divider"></div>
+            <button class="icon-btn" id="btn-zoom-out" data-tooltip="Decrease Font Size">A-</button>
+            <button class="icon-btn" id="btn-zoom-in" data-tooltip="Increase Font Size">A+</button>
         </div>
 
-        <div class="editor-container">
-            <div class="line-numbers" id="line-numbers"></div>
-            <textarea id="editor" spellcheck="false" placeholder="Write logic here..."></textarea>
+        <div class="workspace-core">
+            <div class="split-container" id="split-container">
+                <div class="editor-wrapper" id="editor-wrapper">
+                    <div class="line-numbers" id="line-numbers"></div>
+                    <textarea id="editor" spellcheck="false" placeholder="Write logic here... Try typing '!html' or 'clg' and press Tab!"></textarea>
+                </div>
+                <div class="preview-wrapper" id="preview-wrapper">
+                    <iframe id="preview-frame" sandbox="allow-scripts allow-modals"></iframe>
+                    <div id="preview-text"></div>
+                </div>
+            </div>
             
-            <iframe id="preview-frame" sandbox="allow-scripts"></iframe>
-            <div id="preview-text"></div>
+            <div id="terminal-panel">
+                <div class="terminal-header">
+                    <span>DBP Console Output</span>
+                    <span class="terminal-clear" onclick="document.getElementById('terminal-output').innerHTML=''">🚫 Clear</span>
+                </div>
+                <div class="terminal-output" id="terminal-output"></div>
+            </div>
         </div>
 
         <footer class="status-bar">
             <div class="status-left">
-                <span class="status-btn" id="stat-type">Plain Text</span>
+                <span id="stat-type">TXT</span>
                 <span id="stat-size">0 B</span>
-                <span id="stat-words">0 W</span>
                 <span id="stat-lines">1 Ln</span>
-                <span id="stat-save" style="color: var(--success); display: none;">● Saved</span>
+                <span id="stat-save" style="color: var(--success); display: none;">Saved</span>
             </div>
             <div class="status-right">
-                <span class="status-btn" onclick="document.getElementById('btn-wrap').click()">UTF-8</span>
                 <span id="stat-cursor">Ln 1, Col 1</span>
-                <span class="dbp-tag">DBP Engine</span>
+                <span class="dbp-tag">DBP Engine Apex</span>
             </div>
         </footer>
     </main>
 
-    <div id="modal-find" class="modal-overlay">
-        <div class="modal">
-            <h2>Find and Replace</h2>
-            <input type="text" id="find-input" class="modal-input" placeholder="Find...">
-            <input type="text" id="replace-input" class="modal-input" placeholder="Replace with...">
-            <div class="modal-actions">
-                <button class="modal-btn btn-cancel" onclick="document.getElementById('modal-find').style.display='none'">Cancel</button>
-                <button class="modal-btn btn-confirm" id="confirm-replace">Replace</button>
-            </div>
-        </div>
-    </div>
-
     <script>
         /**
-         * DBP Systems Studio Ultra
-         * Features: Extended Icon Dictionary & Green HTML Theming
+         * DBP Systems Studio APEX
+         * Features: Custom JS Alerts, Tab Rendering, Auto-Detection, True Deletion, Single File Export
          */
-        const state = { db: null, currentId: null, notes: [], fontSize: 14, isDirty: false, isWrapped: false };
+        
+        const state = { 
+            db: null, currentId: null, notes: [], fontSize: 14, 
+            isDirty: false, isWrapped: false, isSplit: false, isTerminalOpen: false 
+        };
+
         const els = {
-            editor: document.getElementById('editor'), lineNumbers: document.getElementById('line-numbers'),
-            filenameInput: document.getElementById('filename-input'), unsavedIndicator: document.getElementById('unsaved-indicator'),
-            notesList: document.getElementById('notes-list'), searchInput: document.getElementById('search-input'),
-            cmdPalette: document.getElementById('cmd-palette'), cmdInput: document.getElementById('cmd-input'), cmdResults: document.getElementById('cmd-results'),
-            sidebar: document.getElementById('sidebar'), resizer: document.getElementById('resizer'), sidebarContainer: document.getElementById('sidebar-container')
+            editor: document.getElementById('editor'), 
+            editorWrapper: document.getElementById('editor-wrapper'),
+            lineNumbers: document.getElementById('line-numbers'),
+            filenameInput: document.getElementById('filename-input'), 
+            unsavedIndicator: document.getElementById('unsaved-indicator'),
+            notesList: document.getElementById('notes-list'), 
+            splitContainer: document.getElementById('split-container'),
+            previewWrapper: document.getElementById('preview-wrapper'), 
+            terminal: document.getElementById('terminal-panel'),
+            terminalOut: document.getElementById('terminal-output'), 
+            cmdPalette: document.getElementById('cmd-palette'),
+            cmdInput: document.getElementById('cmd-input'), 
+            cmdResults: document.getElementById('cmd-results'),
+            fileImport: document.getElementById('file-import')
+        };
+
+        // --- CUSTOM JAVASCRIPT MODALS ---
+        const CustomDialog = {
+            show: (title, msg, showCancel) => {
+                return new Promise((resolve) => {
+                    const overlay = document.getElementById('custom-dialog-overlay');
+                    document.getElementById('dialog-title').innerText = title;
+                    document.getElementById('dialog-message').innerText = msg;
+                    const btnCancel = document.getElementById('dialog-btn-cancel');
+                    const btnConfirm = document.getElementById('dialog-btn-confirm');
+                    
+                    btnCancel.style.display = showCancel ? 'inline-block' : 'none';
+                    overlay.style.display = 'flex';
+                    
+                    btnConfirm.onclick = () => { overlay.style.display = 'none'; resolve(true); };
+                    btnCancel.onclick = () => { overlay.style.display = 'none'; resolve(false); };
+                });
+            },
+            alert: (msg) => CustomDialog.show("Alert", msg, false),
+            confirm: (msg) => CustomDialog.show("Confirm Action", msg, true)
         };
 
         // --- DATABASE ---
         const DB = {
             init: () => new Promise((res, rej) => {
-                const req = indexedDB.open('DBP_Ultra_DB', 1);
-                req.onupgradeneeded = (e) => { if (!e.target.result.objectStoreNames.contains('files')) e.target.result.createObjectStore('files', { keyPath: 'id' }); };
-                req.onsuccess = (e) => { state.db = e.target.result; res(); }; req.onerror = (e) => rej(e.target.error);
+                const req = indexedDB.open('DBP_Apex_DB', 1);
+                req.onupgradeneeded = (e) => { 
+                    if (!e.target.result.objectStoreNames.contains('files')) {
+                        e.target.result.createObjectStore('files', { keyPath: 'id' }); 
+                    }
+                };
+                req.onsuccess = (e) => { state.db = e.target.result; res(); }; 
+                req.onerror = () => rej();
             }),
-            getAll: () => new Promise(res => {
-                const req = state.db.transaction('files', 'readonly').objectStore('files').getAll();
-                req.onsuccess = () => res(req.result.sort((a,b) => b.updatedAt - a.updatedAt));
+            getAll: () => new Promise(res => { 
+                const req = state.db.transaction('files', 'readonly').objectStore('files').getAll(); 
+                req.onsuccess = () => res(req.result.sort((a,b) => b.updatedAt - a.updatedAt)); 
             }),
-            save: (file) => new Promise(res => {
-                const tx = state.db.transaction('files', 'readwrite'); tx.objectStore('files').put(file); tx.oncomplete = () => res(file);
+            save: (file) => new Promise(res => { 
+                const tx = state.db.transaction('files', 'readwrite'); 
+                tx.objectStore('files').put(file); 
+                tx.oncomplete = () => res(file); 
             }),
-            delete: (id) => new Promise(res => {
-                const tx = state.db.transaction('files', 'readwrite'); tx.objectStore('files').delete(id); tx.oncomplete = () => res();
+            delete: (id) => new Promise(res => { 
+                const tx = state.db.transaction('files', 'readwrite'); 
+                tx.objectStore('files').delete(id); 
+                tx.oncomplete = () => res(); 
             })
         };
 
-        // --- INIT ---
-        async function initApp() {
-            await DB.init(); await refreshSidebar(); setupEvents(); setupResizer();
-            if (state.notes.length > 0) openFile(state.notes[0].id); else createNewFile();
+        async function initApp() { 
+            await DB.init(); 
+            await refreshSidebar(); 
+            setupEvents(); 
+            
+            if (state.notes.length > 0) {
+                await openFile(state.notes[0].id); 
+            } else {
+                await createNewFile(); 
+            }
         }
 
-        function setDirty(status) { state.isDirty = status; els.unsavedIndicator.style.display = status ? 'block' : 'none'; }
-        
-        // --- EXPANDED ICON & COLOR DICTIONARY ---
-        function getIconData(filename) {
-            if (!filename.includes('.')) return {i:'📄', c:'ext-default'};
-            const ext = filename.split('.').pop().toLowerCase();
+        function setDirty(s) { 
+            state.isDirty = s; 
+            els.unsavedIndicator.style.display = s ? 'block' : 'none'; 
+        }
+
+        function getIconData(fn) {
+            if(!fn.includes('.')) return {i:'📄', c:''}; 
+            const ext = fn.split('.').pop().toLowerCase();
             const map = { 
-                html: {i:'🌐', c:'ext-html'}, htm: {i:'🌐', c:'ext-html'},
-                css: {i:'🎨', c:'ext-css'}, 
-                js: {i:'⚡', c:'ext-js'}, 
-                json: {i:'⚙️', c:'ext-json'}, 
-                md: {i:'📝', c:'ext-md'},
-                txt: {i:'📄', c:'ext-txt'}, csv: {i:'📊', c:'ext-txt'},
-                ino: {i:'🔌', c:'ext-ino'}, cpp: {i:'⚙️', c:'ext-cpp'}, h: {i:'📦', c:'ext-cpp'}, c: {i:'🔧', c:'ext-cpp'},
-                png: {i:'🖼️', c:'ext-img'}, jpg: {i:'🖼️', c:'ext-img'}, svg: {i:'✨', c:'ext-img'},
-                py: {i:'🐍', c:'ext-py'}
+                html: {i:'🌐', c:'ext-html'}, htm: {i:'🌐', c:'ext-html'}, 
+                css: {i:'🎨', c:'ext-css'}, js: {i:'⚡', c:'ext-js'}, 
+                json: {i:'⚙️', c:'ext-json'}, md: {i:'📝', c:'ext-md'}, 
+                ino: {i:'🔌', c:'ext-ino'}, py: {i:'🐍', c:'ext-py'} 
             };
-            return map[ext] || {i:'📁', c:'ext-default'};
+            return map[ext] || {i:'📄', c:''};
         }
 
         async function refreshSidebar(filter = '') {
-            state.notes = await DB.getAll(); els.notesList.innerHTML = '';
+            state.notes = await DB.getAll(); 
+            els.notesList.innerHTML = '';
+            
             state.notes.filter(n => n.filename.toLowerCase().includes(filter.toLowerCase())).forEach(f => {
-                const icon = getIconData(f.filename);
+                const icon = getIconData(f.filename); 
+                const isHtml = f.filename.toLowerCase().endsWith('.html') || f.filename.toLowerCase().endsWith('.htm');
+                const textClass = isHtml ? 'text-html' : '';
+
                 const div = document.createElement('div');
                 div.className = `note-card ${f.id === state.currentId ? 'active' : ''}`;
-                div.innerHTML = `<div class="note-icon ${icon.c}">${icon.i}</div><div class="note-info"><h3>${f.filename}</h3><p>${new Date(f.updatedAt).toLocaleDateString()}</p></div>`;
-                div.onclick = () => { if(!state.isDirty || confirm("Discard unsaved changes?")) openFile(f.id); };
+                
+                div.innerHTML = `
+                    <div class="note-icon ${icon.c}">${icon.i}</div>
+                    <div class="note-info">
+                        <h3 class="${textClass}">${f.filename}</h3>
+                        <p>${new Date(f.updatedAt).toLocaleDateString()}</p>
+                    </div>`;
+                
+                div.onclick = async () => { 
+                    if(!state.isDirty || await CustomDialog.confirm("Discard unsaved changes?")) {
+                        await openFile(f.id); 
+                    }
+                }; 
+                
                 els.notesList.appendChild(div);
             });
         }
 
+        function autoDetectExtension(content) {
+            const text = content.trim();
+            if (!text) return '.txt';
+            if (/<!DOCTYPE html>|<html/i.test(text) || /<body|<head|<div|<script/i.test(text)) return '.html';
+            if (text.startsWith('{') || text.startsWith('[')) { try { JSON.parse(text); return '.json'; } catch (e) {} }
+            if (/#include\s*<|void\s+setup\s*\(\)|void\s+loop\s*\(\)/.test(text)) return '.ino';
+            if (/^[.#a-zA-Z0-9\s,-]+\s*\{[^}]+\}/m.test(text) && /:[^;]+;/.test(text)) return '.css';
+            if (/function\s+\w+\(|const\s+\w+\s*=|let\s+\w+\s*=|console\.log\(|=>/.test(text)) return '.js';
+            if (/def\s+\w+\(|import\s+[a-z]|print\(|if\s+__name__\s*==\s*['"]__main__['"]/.test(text)) return '.py';
+            return '.txt';
+        }
+
         async function saveFile() {
-            let filename = els.filenameInput.value.trim() || 'untitled.txt';
-            if(!filename.includes('.')) filename += '.txt'; els.filenameInput.value = filename;
-            const file = { id: state.currentId || Date.now().toString(), filename, content: els.editor.value, updatedAt: Date.now() };
-            await DB.save(file); state.currentId = file.id; setDirty(false);
-            document.getElementById('stat-save').style.display = 'inline-flex'; setTimeout(() => document.getElementById('stat-save').style.display = 'none', 2000);
-            await refreshSidebar(els.searchInput.value); if(document.getElementById('tab-preview').classList.contains('active')) renderPreview();
-        }
-
-        function openFile(id) {
-            const file = state.notes.find(n => n.id === id); if (!file) return;
-            state.currentId = file.id; els.editor.value = file.content; els.filenameInput.value = file.filename;
-            setDirty(false); updateMetrics(); switchTab('editor');
-        }
-
-        function createNewFile() {
-            if(state.isDirty && !confirm("Discard unsaved?")) return;
-            state.currentId = null; els.editor.value = els.filenameInput.value = '';
-            setDirty(false); updateMetrics(); els.editor.focus(); switchTab('editor');
-        }
-
-        // --- IDE ENGINE (METRICS & SYNCLINES) ---
-        function updateMetrics() {
-            const text = els.editor.value; const lines = text.split('\n');
-            const pos = els.editor.selectionStart; const cursorLines = text.substring(0, pos).split('\n');
-            const currentRow = cursorLines.length;
+            let fn = els.filenameInput.value.trim(); 
+            if (!fn) fn = 'untitled'; 
+            if (!fn.includes('.')) fn += autoDetectExtension(els.editor.value);
             
-            els.lineNumbers.innerHTML = lines.map((_, i) => `<span class="${i + 1 === currentRow ? 'active-line' : ''}">${i + 1}</span>`).join('');
+            els.filenameInput.value = fn;
+            
+            const file = { 
+                id: state.currentId || Date.now().toString(), 
+                filename: fn, content: els.editor.value, updatedAt: Date.now() 
+            };
+            
+            await DB.save(file); 
+            state.currentId = file.id; 
+            setDirty(false); 
+            
+            document.getElementById('stat-save').style.display = 'inline'; 
+            setTimeout(() => document.getElementById('stat-save').style.display = 'none', 2000);
+            
+            await refreshSidebar(document.getElementById('search-input').value); 
+            updatePreview();
+        }
+
+        async function openFile(id) { 
+            const file = state.notes.find(n => n.id === id); 
+            if (!file) return; 
+            
+            state.currentId = file.id; 
+            els.editor.value = file.content; 
+            els.filenameInput.value = file.filename; 
+            
+            setDirty(false); 
+            updateMetrics(); 
+            updatePreview(); 
+            
+            // Re-render sidebar to apply active highlight to new file
+            await refreshSidebar(document.getElementById('search-input').value);
+        }
+
+        async function createNewFile() { 
+            if(state.isDirty && !(await CustomDialog.confirm("Discard unsaved changes?"))) return; 
+            
+            state.currentId = null; 
+            els.editor.value = '';
+            els.filenameInput.value = ''; 
+            
+            setDirty(false); 
+            updateMetrics(); 
+            els.editor.focus(); 
+            updatePreview(); 
+            
+            await refreshSidebar(document.getElementById('search-input').value);
+        }
+
+        function updateMetrics() {
+            const lines = els.editor.value.split('\n'); 
+            const pos = els.editor.selectionStart; 
+            const cursorLines = els.editor.value.substring(0, pos).split('\n'); 
+            const row = cursorLines.length;
+            
+            els.lineNumbers.innerHTML = lines.map((_, i) => `<span class="${i + 1 === row ? 'active-line' : ''}">${i + 1}</span>`).join(''); 
             els.lineNumbers.scrollTop = els.editor.scrollTop;
             
-            const ext = (els.filenameInput.value || 'txt').split('.').pop().toUpperCase();
+            const ext = (els.filenameInput.value || 'TXT').split('.').pop().toUpperCase();
             document.getElementById('stat-type').innerText = ext;
-            document.getElementById('stat-size').innerText = `${new Blob([text]).size} B`;
-            document.getElementById('stat-lines').innerText = `${lines.length} Ln`;
-            document.getElementById('stat-cursor').innerText = `Ln ${currentRow}, Col ${cursorLines[cursorLines.length - 1].length + 1}`;
+            document.getElementById('stat-lines').innerText = `${lines.length} Ln`; 
+            document.getElementById('stat-size').innerText = `${new Blob([els.editor.value]).size} B`;
+            document.getElementById('stat-cursor').innerText = `Ln ${row}, Col ${cursorLines[row - 1].length + 1}`;
         }
 
-        // --- RESIZABLE SIDEBAR ---
-        function setupResizer() {
-            let isResizing = false;
-            els.resizer.addEventListener('mousedown', () => { isResizing = true; els.resizer.classList.add('active'); });
-            document.addEventListener('mousemove', (e) => {
-                if (!isResizing) return;
-                let newWidth = e.clientX;
-                if (newWidth > 200 && newWidth < 600) document.documentElement.style.setProperty('--sidebar-width', `${newWidth}px`);
-            });
-            document.addEventListener('mouseup', () => { isResizing = false; els.resizer.classList.remove('active'); });
+        function insertText(text, offset = 0) {
+            const s = els.editor.selectionStart;
+            const e = els.editor.selectionEnd; 
+            els.editor.value = els.editor.value.substring(0, s) + text + els.editor.value.substring(e);
+            els.editor.selectionStart = els.editor.selectionEnd = s + text.length + offset; 
+            setDirty(true); 
+            updateMetrics();
         }
 
-        // --- COMMAND PALETTE (Ctrl+P) ---
-        function togglePalette() {
-            if (els.cmdPalette.style.display === 'flex') { els.cmdPalette.style.display = 'none'; els.editor.focus(); }
-            else { 
-                els.cmdPalette.style.display = 'flex'; els.cmdInput.value = ''; 
-                els.cmdInput.focus(); updatePaletteResults(); 
+        els.editor.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const textBeforeCursor = this.value.substring(0, this.selectionStart);
+                const match = textBeforeCursor.match(/([^\s]+)$/);
+                if (match) {
+                    const word = match[1];
+                    const snippets = {
+                        '!html': `<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <title>DBP App</title>\n</head>\n<body>\n    \n</body>\n</html>`,
+                        'clg': `console.log();`,
+                        'for': `for (let i = 0; i < array.length; i++) {\n    \n}`
+                    };
+                    if (snippets[word]) {
+                        this.value = this.value.substring(0, this.selectionStart - word.length) + snippets[word] + this.value.substring(this.selectionEnd);
+                        this.selectionStart = this.selectionEnd = this.selectionStart - word.length + snippets[word].length - (word==='clg'?2:0);
+                        setDirty(true); updateMetrics(); return;
+                    }
+                }
+                insertText("    ");
+            } else if (e.key === 'Enter') {
+                e.preventDefault(); 
+                const currentLine = this.value.substring(0, this.selectionStart).split('\n').pop();
+                const leadingSpaces = currentLine.match(/^\s*/)[0]; 
+                insertText('\n' + leadingSpaces);
+            } else {
+                const pairs = { '{': '}', '[': ']', '(': ')', '"': '"', "'": "'" };
+                if (pairs[e.key]) { e.preventDefault(); insertText(e.key + pairs[e.key], -1); }
             }
-        }
-        function updatePaletteResults() {
-            const q = els.cmdInput.value.toLowerCase(); els.cmdResults.innerHTML = '';
+        });
+
+        // --- PREVIEW FIXES ---
+        const consoleInject = `<script>
+            const _log = console.log, _err = console.error, _warn = console.warn;
+            console.log = (...a) => { window.parent.postMessage({type:'log', msg:a.join(' ')}, '*'); _log(...a); };
+            console.error = (...a) => { window.parent.postMessage({type:'error', msg:a.join(' ')}, '*'); _err(...a); };
+            console.warn = (...a) => { window.parent.postMessage({type:'warn', msg:a.join(' ')}, '*'); _warn(...a); };
+            window.onerror = (m,s,l,c,e) => { window.parent.postMessage({type:'error', msg: m + ' at line ' + l}, '*'); };
+        <\/script>`;
+
+        window.addEventListener('message', (e) => {
+            if(e.data && e.data.type) {
+                const div = document.createElement('div'); 
+                div.className = `log-line log-${e.data.type}`;
+                div.innerText = `[${new Date().toLocaleTimeString()}] ${e.data.msg}`;
+                els.terminalOut.appendChild(div); els.terminalOut.scrollTop = els.terminalOut.scrollHeight;
+                if(!state.isTerminalOpen) document.getElementById('btn-console').click(); 
+            }
+        });
+
+        function updatePreview() {
+            const ext = els.filenameInput.value.toLowerCase().split('.').pop(); 
+            const pf = document.getElementById('preview-frame');
+            const pt = document.getElementById('preview-text');
             
-            if (q.startsWith('>')) { 
-                const cmds = [
-                    { name: 'Toggle Word Wrap', action: () => document.getElementById('btn-wrap').click() },
-                    { name: 'Insert HTML Boilerplate', action: () => document.getElementById('btn-boilerplate').click() },
-                    { name: 'Toggle Sidebar', action: () => document.getElementById('btn-toggle-sidebar').click() }
-                ];
-                cmds.filter(c => c.name.toLowerCase().includes(q.substring(1).trim())).forEach(c => {
-                    const div = document.createElement('div'); div.className = 'cmd-item';
-                    div.innerHTML = `<span>⚙️ ${c.name}</span> <span class="badge">Command</span>`;
-                    div.onclick = () => { c.action(); togglePalette(); }; els.cmdResults.appendChild(div);
-                });
-            } else { 
-                state.notes.filter(n => n.filename.toLowerCase().includes(q)).forEach(f => {
-                    const div = document.createElement('div'); div.className = 'cmd-item';
-                    div.innerHTML = `<span>📄 ${f.filename}</span> <span class="badge">File</span>`;
-                    div.onclick = () => { if(!state.isDirty || confirm("Discard unsaved?")) openFile(f.id); togglePalette(); };
-                    els.cmdResults.appendChild(div);
-                });
-            }
-        }
-        els.cmdInput.addEventListener('input', updatePaletteResults);
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && els.cmdPalette.style.display === 'flex') togglePalette(); });
-
-        // --- LIVE PREVIEW ---
-        function renderPreview() {
-            const ext = els.filenameInput.value.toLowerCase().split('.').pop();
-            const content = els.editor.value; const pf = document.getElementById('preview-frame'); const pt = document.getElementById('preview-text');
-            if (['html', 'htm', 'svg'].includes(ext)) { pf.style.display = 'block'; pt.style.display = 'none'; pf.srcdoc = content; }
-            else {
+            if (['html', 'htm'].includes(ext)) { 
+                pf.style.display = 'block'; pt.style.display = 'none'; 
+                pf.srcdoc = consoleInject + els.editor.value; 
+            } else {
                 pf.style.display = 'none'; pt.style.display = 'block';
-                if(ext === 'json') { try { pt.innerHTML = `<pre style="color:var(--success);">${JSON.stringify(JSON.parse(content), null, 4)}</pre>`; } catch(e) { pt.innerHTML = `<div style="color:var(--danger)">Error: ${e.message}</div>`; } }
-                else pt.innerHTML = content.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+                if(ext === 'json') { 
+                    try { pt.innerHTML = `<pre style="color:var(--success);">${JSON.stringify(JSON.parse(els.editor.value), null, 4)}</pre>`; } 
+                    catch(e) { pt.innerHTML = `<div style="color:var(--danger)">Error: ${e.message}</div>`; } 
+                } else {
+                    pt.innerHTML = els.editor.value.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+                }
             }
         }
-        function switchTab(tab) {
-            document.getElementById('tab-editor').classList.toggle('active', tab === 'editor'); document.getElementById('tab-preview').classList.toggle('active', tab === 'preview');
-            els.editor.style.display = els.lineNumbers.style.display = tab === 'editor' ? 'block' : 'none';
-            if(tab === 'preview') renderPreview(); else { document.getElementById('preview-frame').style.display = document.getElementById('preview-text').style.display = 'none'; }
-        }
 
-        // --- EVENTS ---
+        // --- EXPORT, IMPORT & DELETE ---
+        document.getElementById('btn-import').onclick = async () => {
+            if(state.isDirty && !(await CustomDialog.confirm("You have unsaved changes. Discard them to open a new file?"))) return;
+            els.fileImport.click();
+        };
+
+        els.fileImport.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                const newFile = { id: Date.now().toString(), filename: file.name, content: ev.target.result, updatedAt: Date.now() };
+                await DB.save(newFile);
+                await openFile(newFile.id);
+                CustomDialog.alert(`File "${file.name}" opened successfully!`);
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        };
+
+        document.getElementById('btn-export').onclick = () => {
+            const filename = els.filenameInput.value || 'export.txt';
+            const ext = filename.split('.').pop().toLowerCase();
+            let mimeType = 'text/plain';
+            if (ext === 'html' || ext === 'htm') mimeType = 'text/html';
+            else if (ext === 'js') mimeType = 'application/javascript';
+            else if (ext === 'css') mimeType = 'text/css';
+            else if (ext === 'json') mimeType = 'application/json';
+
+            const blob = new Blob([els.editor.value], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = filename;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        };
+        
+        document.getElementById('btn-backup').onclick = async () => {
+            const all = await DB.getAll(); 
+            const blob = new Blob([JSON.stringify(all)], { type: 'application/json' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `DBP_Workspace_${new Date().getTime()}.dbp`; a.click();
+        };
+
+        document.getElementById('btn-restore').onclick = () => els.fileRestore.click();
+
+        document.getElementById('file-restore').onchange = (e) => {
+            const file = e.target.files[0]; if(!file) return; 
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                try {
+                    const data = JSON.parse(ev.target.result); 
+                    if(!(await CustomDialog.confirm("This will merge with your current files. Proceed?"))) return;
+                    for(let f of data) await DB.save(f); 
+                    await refreshSidebar(); 
+                    CustomDialog.alert("Workspace Restored!");
+                } catch(err) { CustomDialog.alert("Invalid .dbp backup file."); }
+            }; reader.readAsText(file);
+        };
+
+        document.getElementById('btn-delete').onclick = async () => { 
+            if(!state.currentId) return CustomDialog.alert("No saved file is currently selected.");
+            if(await CustomDialog.confirm(`Permanently delete "${els.filenameInput.value}"?`)) { 
+                await DB.delete(state.currentId); 
+                await CustomDialog.alert(`File deleted.`);
+                await createNewFile(); 
+            }
+        };
+
+        // --- TAB & UI TOGGLES ---
+        document.getElementById('tab-editor').onclick = () => { 
+            document.getElementById('tab-editor').classList.add('active'); 
+            document.getElementById('tab-preview').classList.remove('active'); 
+            els.splitContainer.classList.remove('split-mode'); 
+            state.isSplit = false;
+            document.getElementById('btn-split').classList.remove('active');
+            
+            els.editorWrapper.style.display = 'flex'; 
+            els.editorWrapper.style.width = '100%';
+            els.previewWrapper.style.display = 'none'; 
+        };
+
+        document.getElementById('tab-preview').onclick = () => { 
+            document.getElementById('tab-preview').classList.add('active'); 
+            document.getElementById('tab-editor').classList.remove('active'); 
+            els.splitContainer.classList.remove('split-mode'); 
+            state.isSplit = false;
+            document.getElementById('btn-split').classList.remove('active');
+            
+            els.editorWrapper.style.display = 'none'; 
+            els.previewWrapper.style.display = 'flex'; 
+            els.previewWrapper.style.width = '100%';
+            updatePreview(); 
+        };
+
+        document.getElementById('btn-split').onclick = () => { 
+            state.isSplit = !state.isSplit; 
+            document.getElementById('btn-split').classList.toggle('active', state.isSplit); 
+            
+            if (state.isSplit) {
+                document.getElementById('tab-editor').classList.add('active'); 
+                document.getElementById('tab-preview').classList.add('active'); 
+                els.splitContainer.classList.add('split-mode'); 
+                els.editorWrapper.style.display = 'flex';
+                els.editorWrapper.style.width = '50%';
+                els.previewWrapper.style.display = 'flex';
+                els.previewWrapper.style.width = '50%';
+                updatePreview(); 
+            } else {
+                document.getElementById('tab-editor').click();
+            }
+        };
+
+        document.getElementById('btn-console').onclick = () => { 
+            state.isTerminalOpen = !state.isTerminalOpen; 
+            els.terminal.style.display = state.isTerminalOpen ? 'flex' : 'none'; 
+            document.getElementById('btn-console').classList.toggle('active', state.isTerminalOpen); 
+        };
+
+        function applyFontSize() { document.documentElement.style.setProperty('--editor-font-size', `${state.fontSize}px`); }
+        document.getElementById('btn-zoom-in').onclick = () => { if (state.fontSize < 40) { state.fontSize += 2; applyFontSize(); }};
+        document.getElementById('btn-zoom-out').onclick = () => { if (state.fontSize > 8) { state.fontSize -= 2; applyFontSize(); }};
+        
+        function togglePalette() { els.cmdPalette.style.display = els.cmdPalette.style.display === 'flex' ? 'none' : 'flex'; if(els.cmdPalette.style.display==='flex') { els.cmdInput.value = ''; els.cmdInput.focus(); updatePalette(); } else els.editor.focus(); }
+        function updatePalette() {
+            const q = els.cmdInput.value.toLowerCase(); els.cmdResults.innerHTML = '';
+            if (q.startsWith('>')) { 
+                const cmds = [ { n: 'Split Screen', a: () => document.getElementById('btn-split').click() }, { n: 'Toggle Terminal', a: () => document.getElementById('btn-console').click() }, { n: 'Export Workspace', a: () => document.getElementById('btn-backup').click() } ];
+                cmds.filter(c => c.n.toLowerCase().includes(q.substring(1).trim())).forEach(c => { const d = document.createElement('div'); d.className = 'cmd-item'; d.innerHTML = `<span>⚙️ ${c.n}</span>`; d.onclick = () => { c.a(); togglePalette(); }; els.cmdResults.appendChild(d); });
+            } else { 
+                state.notes.filter(n => n.filename.toLowerCase().includes(q)).forEach(f => { const d = document.createElement('div'); d.className = 'cmd-item'; d.innerHTML = `<span>📄 ${f.filename}</span>`; d.onclick = async () => { if(!state.isDirty || await CustomDialog.confirm("Discard?")) openFile(f.id); togglePalette(); }; els.cmdResults.appendChild(d); });
+            }
+        }
+        els.cmdInput.addEventListener('input', updatePalette);
+
         function setupEvents() {
             els.editor.addEventListener('input', () => { setDirty(true); updateMetrics(); });
             els.editor.addEventListener('scroll', () => els.lineNumbers.scrollTop = els.editor.scrollTop);
             els.editor.addEventListener('keyup', updateMetrics); els.editor.addEventListener('click', updateMetrics);
             els.filenameInput.addEventListener('input', () => setDirty(true));
-
-            // Auto-Brackets
-            els.editor.addEventListener('keydown', function(e) {
-                const pairs = { '{': '}', '[': ']', '(': ')', '"': '"', "'": "'" };
-                if (pairs[e.key]) { e.preventDefault(); const s=this.selectionStart, e_pos=this.selectionEnd; this.value=this.value.substring(0,s)+e.key+pairs[e.key]+this.value.substring(e_pos); this.selectionStart=this.selectionEnd=s+1; setDirty(true); updateMetrics(); } 
-                else if (e.key === 'Tab') { e.preventDefault(); const s=this.selectionStart, e_pos=this.selectionEnd; this.value=this.value.substring(0,s)+"    "+this.value.substring(e_pos); this.selectionStart=this.selectionEnd=s+4; setDirty(true); updateMetrics(); }
-            });
-
             document.getElementById('btn-new').onclick = createNewFile; document.getElementById('btn-save').onclick = saveFile;
-            document.getElementById('btn-delete').onclick = async () => { if(state.currentId && confirm(`Delete ${els.filenameInput.value}?`)) { await DB.delete(state.currentId); createNewFile(); }};
-            document.getElementById('btn-wrap').onclick = () => { state.isWrapped = !state.isWrapped; els.editor.style.whiteSpace = state.isWrapped ? 'pre-wrap' : 'pre'; };
-            document.getElementById('btn-toggle-sidebar').onclick = () => els.sidebarContainer.classList.toggle('hidden');
-            document.getElementById('btn-find').onclick = () => { document.getElementById('modal-find').style.display = 'flex'; document.getElementById('find-input').focus(); };
+            document.getElementById('btn-wrap').onclick = () => { state.isWrapped = !state.isWrapped; els.editor.style.whiteSpace = state.isWrapped ? 'pre-wrap' : 'pre'; document.getElementById('btn-wrap').classList.toggle('active'); };
+            document.getElementById('btn-toggle-sidebar').onclick = () => document.getElementById('sidebar-container').classList.toggle('hidden');
             document.getElementById('btn-palette').onclick = togglePalette;
-            document.getElementById('btn-export').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([els.editor.value], {type: 'text/plain'})); a.download = els.filenameInput.value || 'download.txt'; a.click(); };
-            document.getElementById('btn-launch').onclick = () => { window.open(URL.createObjectURL(new Blob([els.editor.value], { type: els.filenameInput.value.endsWith('html') ? 'text/html' : 'text/plain' })), '_blank'); };
+            document.getElementById('btn-launch').onclick = () => { const mimeType = els.filenameInput.value.endsWith('html') ? 'text/html' : 'text/plain'; window.open(URL.createObjectURL(new Blob([els.editor.value], { type: mimeType })), '_blank'); };
+            document.getElementById('search-input').addEventListener('input', (e) => refreshSidebar(e.target.value));
             
-            document.getElementById('btn-zoom-in').onclick = () => { state.fontSize += 2; els.editor.style.fontSize = els.lineNumbers.style.fontSize = `${state.fontSize}px`; };
-            document.getElementById('btn-zoom-out').onclick = () => { state.fontSize -= 2; els.editor.style.fontSize = els.lineNumbers.style.fontSize = `${state.fontSize}px`; };
-            
-            document.getElementById('btn-boilerplate').onclick = () => { if (els.editor.value.trim() !== "" && !confirm("Overwrite?")) return; if(!els.filenameInput.value.includes('.')) els.filenameInput.value = 'index.html'; els.editor.value = `<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <title>DBP Project</title>\n    <style>\n        body { background: #111; color: #fff; font-family: sans-serif; }\n    </style>\n</head>\n<body>\n    <h1>DBP Studio Ultra</h1>\n</body>\n</html>`; setDirty(true); updateMetrics(); };
-
-            document.getElementById('confirm-replace').onclick = () => {
-                const findText = document.getElementById('find-input').value; const replaceText = document.getElementById('replace-input').value;
-                if(findText) { els.editor.value = els.editor.value.split(findText).join(replaceText); setDirty(true); updateMetrics(); }
-                document.getElementById('modal-find').style.display = 'none';
-            };
-
-            document.getElementById('tab-editor').onclick = () => switchTab('editor'); document.getElementById('tab-preview').onclick = () => switchTab('preview');
-            els.searchInput.addEventListener('input', (e) => refreshSidebar(e.target.value));
-
-            document.addEventListener('keydown', (e) => {
-                if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveFile(); }
-                if ((e.ctrlKey || e.metaKey) && e.key === 'p') { e.preventDefault(); togglePalette(); }
-                if ((e.ctrlKey || e.metaKey) && e.key === 'f') { e.preventDefault(); document.getElementById('btn-find').click(); }
-            });
+            let isResizing = false; document.getElementById('resizer').onmousedown = () => isResizing = true;
+            document.onmousemove = (e) => { if(isResizing && e.clientX > 200 && e.clientX < 500) document.documentElement.style.setProperty('--sidebar-width', `${e.clientX}px`); };
+            document.onmouseup = () => isResizing = false;
+            document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveFile(); } if ((e.ctrlKey || e.metaKey) && e.key === 'p') { e.preventDefault(); togglePalette(); } if (e.key === 'Escape') { if(document.getElementById('custom-dialog-overlay').style.display === 'flex') document.getElementById('dialog-btn-cancel').click(); else if (els.cmdPalette.style.display === 'flex') togglePalette(); }});
             window.onbeforeunload = () => state.isDirty ? "Unsaved changes!" : null;
         }
 
