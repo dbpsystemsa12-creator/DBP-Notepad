@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DBP Systems | Advanced IDE & Notepad</title>
+    <style>
+        /* =========================================
+           ADVANCED CSS VARIABLES & RESET
+           ========================================= */
+        :root {
+            --bg-gradient: linear-gradient(357deg, #000000, #1c1c1c);
+            --glass-bg: rgba(20, 20, 25, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent-color: #00d2ff;
+            --accent-hover: #3a7bd5;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+            --success: #10b981;
+            --font-mono: 'Fira Code', Consolas, 'Courier New', monospace;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* =========================================
+           SIDEBAR & FILE EXPLORER
+           ========================================= */
+        #sidebar {
+            width: 280px;
+            min-width: 280px;
+            background: var(--glass-bg);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            box-shadow: 5px 0 20px rgba(0,0,0,0.6);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .brand h1 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: -webkit-linear-gradient(0deg, var(--accent-color), #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 8px 12px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .search-box:focus { border-color: var(--accent-color); }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: #000;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover { background: var(--accent-hover); color: #fff; }
+
+        #notes-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .note-card {
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .note-card:hover { background: rgba(255,255,255,0.05); }
+
+        .note-card.active {
+            background: rgba(0, 210, 255, 0.1);
+            border-color: rgba(0, 210, 255, 0.2);
+        }
+
+        .note-icon { font-size: 1.2rem; }
+        
+        .note-info { overflow: hidden; }
+        .note-info h3 { font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .note-info p { font-size: 0.75rem; color: var(--text-muted); margin-top: 3px; }
+
+        /* =========================================
+           MAIN WORKSPACE
+           ========================================= */
+        #workspace {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: rgba(10, 10, 10, 0.4);
+        }
+
+        .tabs {
+            display: flex;
+            background: rgba(0,0,0,0.8);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 0 10px;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .tab:hover { color: var(--text-main); background: rgba(255,255,255,0.05); }
+        .tab.active { color: var(--accent-color); border-bottom-color: var(--accent-color); }
+
+        .toolbar {
+            padding: 10px 20px;
+            background: rgba(20,20,20,0.6);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .filename-input {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            width: 250px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .filename-input:focus { border-color: var(--accent-color); }
+
+        .btn-icon {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-main);
+            border: 1px solid var(--glass-border);
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-icon:hover { background: rgba(255,255,255,0.1); }
+        .btn-danger:hover { background: var(--danger); border-color: var(--danger); }
+
+        /* =========================================
+           EDITOR & LIVE PREVIEW
+           ========================================= */
+        .editor-container {
+            flex-grow: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .line-numbers {
+            width: 50px;
+            background: rgba(0,0,0,0.5);
+            border-right: 1px solid var(--glass-border);
+            padding: 20px 0;
+            text-align: right;
+            color: #64748b;
+            font-family: var(--font-mono);
+            font-size: 15px;
+            line-height: 1.6;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .line-numbers span { display: block; padding-right: 10px; }
+
+        #editor {
+            flex-grow: 1;
+            width: 100%;
+            padding: 20px;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #f8fafc;
+            background: transparent;
+            border: none;
+            outline: none;
+            resize: none;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            white-space: pre;
+            tab-size: 4;
+        }
+
+        /* Iframe for HTML Live Rendering */
+        #preview-frame {
+            display: none;
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #fff; /* White background for accurate web testing */
+        }
+
+        /* Standard Text/Markdown Preview */
+        #preview-text {
+            display: none;
+            width: 100%;
+            height: 100%;
+            padding: 30px;
+            overflow-y: auto;
+            background: #0f172a;
+            line-height: 1.6;
+        }
+
+        /* =========================================
+           STATUS BAR
+           ========================================= */
+        .status-bar {
+            background: #000;
+            border-top: 1px solid var(--glass-border);
+            padding: 6px 20px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        .status-left span { margin-right: 15px; }
+        .dbp-tag { color: var(--accent-color); font-weight: bold; }
+
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+    </style>
+</head>
+<body>
+
+    <aside id="sidebar">
+        <div class="sidebar-header">
+            <div class="brand">
+                <h1>DBP IDE</h1>
+                <button class="btn-primary" id="btn-new">+ New File</button>
+            </div>
+            <input type="text" id="search-input" class="search-box" placeholder="Search files...">
+        </div>
+        <div id="notes-list"></div>
+    </aside>
+
+    <main id="workspace">
+        <div class="tabs">
+            <div class="tab active" id="tab-editor">Code Editor</div>
+            <div class="tab" id="tab-preview">Live Preview</div>
+        </div>
+
+        <div class="toolbar">
+            <input type="text" id="filename-input" class="filename-input" placeholder="e.g. index.html, style.css, script.js">
+            <button class="btn-icon" id="btn-save">💾 Save</button>
+            <button class="btn-icon" id="btn-export">📥 Export</button>
+            <button class="btn-icon btn-danger" id="btn-delete">🗑️ Delete</button>
+            <div style="flex-grow: 1;"></div>
+            <button class="btn-icon" id="btn-zoom-out">A-</button>
+            <button class="btn-icon" id="btn-zoom-in">A+</button>
+        </div>
+
+        <div class="editor-container">
+            <div class="line-numbers" id="line-numbers"></div>
+            <textarea id="editor" spellcheck="false" placeholder="Write your code or text here..."></textarea>
+            
+            <iframe id="preview-frame" sandbox="allow-scripts"></iframe>
+            <div id="preview-text"></div>
+        </div>
+
+        <footer class="status-bar">
+            <div class="status-left">
+                <span id="stat-type">Plain Text</span>
+                <span id="stat-lines">1 Line</span>
+                <span id="stat-size">0 Bytes</span>
+                <span id="stat-save" style="color: var(--success); display: none;">Saved!</span>
+            </div>
+            <div class="dbp-tag">DBP Systems Platform</div>
+        </footer>
+    </main>
+
+    <script>
+        /**
+         * DBP Systems Web IDE Engine
+         * Features: True File Extensions, Live Iframe Rendering, IndexedDB Storage
+         */
+        
+        const state = {
+            db: null,
+            currentNoteId: null,
+            notes: [],
+            fontSize: 15,
+            saveTimeout: null
+        };
+
+        const els = {
+            editor: document.getElementById('editor'),
+            previewFrame: document.getElementById('preview-frame'),
+            previewText: document.getElementById('preview-text'),
+            notesList: document.getElementById('notes-list'),
+            lineNumbers: document.getElementById('line-numbers'),
+            filenameInput: document.getElementById('filename-input'),
+            searchInput: document.getElementById('search-input'),
+            tabEditor: document.getElementById('tab-editor'),
+            tabPreview: document.getElementById('tab-preview'),
+            btnNew: document.getElementById('btn-new'),
+            btnSave: document.getElementById('btn-save'),
+            btnExport: document.getElementById('btn-export'),
+            btnDelete: document.getElementById('btn-delete'),
+            btnZoomIn: document.getElementById('btn-zoom-in'),
+            btnZoomOut: document.getElementById('btn-zoom-out'),
+            statType: document.getElementById('stat-type'),
+            statLines: document.getElementById('stat-lines'),
+            statSize: document.getElementById('stat-size'),
+            statSave: document.getElementById('stat-save')
+        };
+
+        // --- IndexedDB ---
+        const DB = {
+            init: () => new Promise((resolve, reject) => {
+                const req = indexedDB.open('DBP_IDE_Database', 1);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('files')) {
+                        db.createObjectStore('files', { keyPath: 'id' });
+                    }
+                };
+                req.onsuccess = (e) => { state.db = e.target.result; resolve(); };
+                req.onerror = (e) => reject(e.target.error);
+            }),
+            getAll: () => new Promise((resolve) => {
+                const req = state.db.transaction('files', 'readonly').objectStore('files').getAll();
+                req.onsuccess = () => resolve(req.result.sort((a,b) => b.updatedAt - a.updatedAt));
+            }),
+            save: (file) => new Promise((resolve) => {
+                const tx = state.db.transaction('files', 'readwrite');
+                tx.objectStore('files').put(file);
+                tx.oncomplete = () => resolve(file);
+            }),
+            delete: (id) => new Promise((resolve) => {
+                const tx = state.db.transaction('files', 'readwrite');
+                tx.objectStore('files').delete(id);
+                tx.oncomplete = () => resolve();
+            })
+        };
+
+        // --- Core Logic ---
+        async function init() {
+            await DB.init();
+            await refreshSidebar();
+            setupEvents();
+            if (state.notes.length > 0) openFile(state.notes[0].id);
+            else createNewFile();
+        }
+
+        function getFileIconAndType(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            if(filename === ext) return { icon: '📄', type: 'Plain Text' }; // No extension
+            
+            const map = {
+                'html': { icon: '🌐', type: 'HTML Document' },
+                'css':  { icon: '🎨', type: 'CSS Stylesheet' },
+                'js':   { icon: '⚡', type: 'JavaScript' },
+                'json': { icon: '⚙️', type: 'JSON Data' },
+                'md':   { icon: '📝', type: 'Markdown' },
+                'txt':  { icon: '📄', type: 'Text Document' }
+            };
+            return map[ext] || { icon: '📄', type: `${ext.toUpperCase()} File` };
+        }
+
+        async function refreshSidebar(filter = '') {
+            state.notes = await DB.getAll();
+            els.notesList.innerHTML = '';
+            
+            const filtered = state.notes.filter(n => 
+                n.filename.toLowerCase().includes(filter.toLowerCase())
+            );
+
+            filtered.forEach(file => {
+                const { icon } = getFileIconAndType(file.filename);
+                const date = new Date(file.updatedAt).toLocaleDateString();
+                
+                const div = document.createElement('div');
+                div.className = `note-card ${file.id === state.currentNoteId ? 'active' : ''}`;
+                div.innerHTML = `
+                    <div class="note-icon">${icon}</div>
+                    <div class="note-info">
+                        <h3>${file.filename}</h3>
+                        <p>${date} • ${(file.content.length / 1024).toFixed(1)} KB</p>
+                    </div>
+                `;
+                div.onclick = () => openFile(file.id);
+                els.notesList.appendChild(div);
+            });
+        }
+
+        async function saveCurrentFile(manual = false) {
+            const content = els.editor.value;
+            let filename = els.filenameInput.value.trim() || 'Untitled.txt';
+            
+            // Auto-append .txt if no extension is provided
+            if(!filename.includes('.')) filename += '.txt';
+            if(els.filenameInput.value !== filename) els.filenameInput.value = filename;
+
+            const file = {
+                id: state.currentNoteId || Date.now().toString(),
+                filename: filename,
+                content: content,
+                updatedAt: Date.now()
+            };
+
+            await DB.save(file);
+            state.currentNoteId = file.id;
+            
+            els.statSave.style.display = 'inline';
+            setTimeout(() => els.statSave.style.display = 'none', 2000);
+            
+            updateMetrics();
+            if (manual || els.filenameInput === document.activeElement) await refreshSidebar(els.searchInput.value);
+            
+            // Update preview live if active and it's an HTML file
+            if(els.tabPreview.classList.contains('active')) renderPreview();
+        }
+
+        function openFile(id) {
+            const file = state.notes.find(n => n.id === id);
+            if (!file) return;
+            
+            state.currentNoteId = file.id;
+            els.editor.value = file.content;
+            els.filenameInput.value = file.filename;
+            els.btnDelete.style.display = 'flex';
+            
+            refreshSidebar(els.searchInput.value);
+            updateMetrics();
+            syncLines();
+            switchTab('editor');
+        }
+
+        function createNewFile() {
+            state.currentNoteId = null;
+            els.editor.value = '';
+            els.filenameInput.value = '';
+            els.btnDelete.style.display = 'none';
+            refreshSidebar();
+            updateMetrics();
+            syncLines();
+            els.editor.focus();
+            switchTab('editor');
+        }
+
+        async function deleteFile() {
+            if (!state.currentNoteId) return;
+            if (confirm(`Delete ${els.filenameInput.value}? This cannot be undone.`)) {
+                await DB.delete(state.currentNoteId);
+                createNewFile();
+            }
+        }
+
+        // --- Editor Mechanics ---
+        function updateMetrics() {
+            const text = els.editor.value;
+            const filename = els.filenameInput.value || 'Untitled.txt';
+            const { type } = getFileIconAndType(filename);
+            
+            els.statType.innerText = type;
+            els.statLines.innerText = `${text.split('\n').length} Lines`;
+            els.statSize.innerText = `${(new Blob([text]).size)} Bytes`;
+        }
+
+        function syncLines() {
+            const lines = els.editor.value.split('\n').length;
+            els.lineNumbers.innerHTML = Array(lines).fill(0).map((_, i) => `<span>${i + 1}</span>`).join('');
+            els.lineNumbers.scrollTop = els.editor.scrollTop;
+        }
+
+        function exportFile() {
+            const content = els.editor.value;
+            const filename = els.filenameInput.value || 'download.txt';
+            const blob = new Blob([content], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        // --- The Magic Preview Engine ---
+        function renderPreview() {
+            const filename = els.filenameInput.value.toLowerCase();
+            const content = els.editor.value;
+
+            // If it's an HTML file, render it as a real website in the iframe
+            if (filename.endsWith('.html')) {
+                els.previewFrame.style.display = 'block';
+                els.previewText.style.display = 'none';
+                els.previewFrame.srcdoc = content; 
+            } else {
+                // Otherwise, show as formatted text/markdown
+                els.previewFrame.style.display = 'none';
+                els.previewText.style.display = 'block';
+                
+                let html = content.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                if (filename.endsWith('.md')) {
+                    html = html.replace(/^### (.*$)/gim, '<h3 style="color:#00d2ff">$1</h3>')
+                               .replace(/^## (.*$)/gim, '<h2 style="color:#00d2ff">$1</h2>')
+                               .replace(/^# (.*$)/gim, '<h1 style="color:#00d2ff">$1</h1>')
+                               .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+                               .replace(/```([^]+?)```/gim, '<pre style="background:#000;padding:10px;border-radius:5px;"><code>$1</code></pre>');
+                }
+                els.previewText.innerHTML = html.replace(/\n/g, '<br>');
+            }
+        }
+
+        function switchTab(tab) {
+            if (tab === 'preview') {
+                els.tabEditor.classList.remove('active');
+                els.tabPreview.classList.add('active');
+                els.editor.style.display = 'none';
+                els.lineNumbers.style.display = 'none';
+                renderPreview();
+            } else {
+                els.tabPreview.classList.remove('active');
+                els.tabEditor.classList.add('active');
+                els.previewFrame.style.display = 'none';
+                els.previewText.style.display = 'none';
+                els.editor.style.display = 'block';
+                els.lineNumbers.style.display = 'block';
+            }
+        }
+
+        // --- Event Binding ---
+        function setupEvents() {
+            els.editor.addEventListener('input', () => {
+                updateMetrics();
+                syncLines();
+                clearTimeout(state.saveTimeout);
+                state.saveTimeout = setTimeout(() => saveCurrentFile(false), 1000);
+            });
+            els.editor.addEventListener('scroll', syncLines);
+            els.filenameInput.addEventListener('change', () => saveCurrentFile(true));
+
+            els.btnNew.addEventListener('click', createNewFile);
+            els.btnSave.addEventListener('click', () => saveCurrentFile(true));
+            els.btnDelete.addEventListener('click', deleteFile);
+            els.btnExport.addEventListener('click', exportFile);
+
+            els.tabEditor.addEventListener('click', () => switchTab('editor'));
+            els.tabPreview.addEventListener('click', () => switchTab('preview'));
+            els.searchInput.addEventListener('input', (e) => refreshSidebar(e.target.value));
+
+            // Zoom
+            els.btnZoomIn.addEventListener('click', () => {
+                if(state.fontSize < 30) { state.fontSize += 2; els.editor.style.fontSize = els.lineNumbers.style.fontSize = `${state.fontSize}px`; }
+            });
+            els.btnZoomOut.addEventListener('click', () => {
+                if(state.fontSize > 10) { state.fontSize -= 2; els.editor.style.fontSize = els.lineNumbers.style.fontSize = `${state.fontSize}px`; }
+            });
+
+            // Keyboard Shortcuts
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault();
+                    saveCurrentFile(true);
+                }
+                if (e.key === 'Tab' && document.activeElement === els.editor) {
+                    e.preventDefault();
+                    const start = els.editor.selectionStart;
+                    const end = els.editor.selectionEnd;
+                    els.editor.value = els.editor.value.substring(0, start) + "    " + els.editor.value.substring(end);
+                    els.editor.selectionStart = els.editor.selectionEnd = start + 4;
+                }
+            });
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
