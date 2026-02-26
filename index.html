@@ -259,13 +259,12 @@
             #sidebar-container { position: absolute; left: 0; top: 0; height: 100vh; transform: translateX(-100%); transition: 0.3s; }
             #sidebar-container:not(.hidden) { transform: translateX(0); box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
             #sidebar { width: 280px; max-width: 85vw; }
-            .resizer { display: none; } /* Disable manual resize on mobile */
+            .resizer { display: none; } 
             
             .toolbar { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 10px; }
             .filename-input { width: 140px; }
-            .icon-btn::after { display: none !important; } /* No hover tooltips on mobile */
+            .icon-btn::after { display: none !important; } 
             
-            /* Stack split mode vertically on small screens */
             .split-container.split-mode { flex-direction: column; }
             .split-mode .editor-wrapper, .split-mode .preview-wrapper { width: 100% !important; height: 50%; border-right: none; }
             .split-mode .editor-wrapper { border-bottom: 1px solid var(--border-color); }
@@ -386,39 +385,17 @@
     </main>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, getDocs, setDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // --- AUTHENTICATION LOGIC ---
-        const MASTER_PASS = "DBP_236562_DBP_9827700975_DBP";
+        // ==========================================
+        // 1. INITIALIZE VARIABLES FIRST (Fixes the TDZ crash!)
+        // ==========================================
         const loginOverlay = document.getElementById('login-overlay');
         const loginBtn = document.getElementById('login-btn');
         const loginPass = document.getElementById('login-pass');
         const loginError = document.getElementById('login-error');
 
-        // 🚨 RACE CONDITION FIXED: We run this immediately, no 'load' wrapper needed.
-        if (localStorage.getItem('dbp_auth') === 'true') {
-            loginOverlay.style.display = 'none';
-            initFirebaseApp();
-        }
-
-        loginBtn.addEventListener('click', () => {
-            if (loginPass.value === MASTER_PASS) {
-                localStorage.setItem('dbp_auth', 'true');
-                loginOverlay.style.display = 'none';
-                initFirebaseApp();
-            } else {
-                loginError.style.display = 'block';
-                loginPass.value = '';
-            }
-        });
-
-        loginPass.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') loginBtn.click();
-        });
-
-
-        // --- APPLICATION LOGIC ---
         const state = { 
             db: null, currentId: null, notes: [], fontSize: 14, 
             isDirty: false, isWrapped: false, isSplit: false, isTerminalOpen: false 
@@ -461,7 +438,9 @@
             confirm: (msg) => CustomDialog.show("Confirm Action", msg, true)
         };
 
-        // --- FIREBASE DATABASE ---
+        // ==========================================
+        // 2. FIREBASE & CORE FUNCTIONS
+        // ==========================================
         const DB = {
             init: () => {
                 const firebaseConfig = {
@@ -472,7 +451,8 @@
                   messagingSenderId: "172820150595",
                   appId: "1:172820150595:web:09d62620c54388376e17f6"
                 };
-                const app = initializeApp(firebaseConfig);
+                // Safe initialization to prevent duplicates
+                const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
                 state.db = getFirestore(app);
             },
             getAll: async () => {
@@ -483,7 +463,6 @@
                     return files.sort((a,b) => b.updatedAt - a.updatedAt);
                 } catch(e) {
                     console.error("Firebase Read Error:", e);
-                    CustomDialog.alert("Could not fetch files from cloud. Check your connection.");
                     return [];
                 }
             },
@@ -493,7 +472,6 @@
                     return file;
                 } catch (e) {
                     console.error("Firebase Save Error:", e);
-                    CustomDialog.alert("Failed to sync file to the cloud.");
                     throw e;
                 }
             },
@@ -502,22 +480,16 @@
                     await deleteDoc(doc(state.db, "files", id));
                 } catch (e) {
                     console.error("Firebase Delete Error:", e);
-                    CustomDialog.alert("Failed to delete file from the cloud.");
                 }
             }
         };
 
         async function initFirebaseApp() { 
             DB.init(); 
-            
-            // 🚨 THIS STOPS THE FREEZE 🚨
-            // Boot up the UI buttons BEFORE we try to talk to the database.
             setupEvents(); 
             
             try {
-                // Fetch from Firebase exactly ONE time on startup
                 await fetchDatabase(); 
-                
                 if (state.notes.length > 0) {
                     await openFile(state.notes[0].id); 
                 } else {
@@ -546,19 +518,18 @@
             return map[ext] || {i:'📄', c:''};
         }
 
-        // DECOUPLED: This function ONLY downloads data from Firebase
         async function fetchDatabase() {
             state.notes = await DB.getAll(); 
             renderSidebar();
         }
 
-        // DECOUPLED: This function ONLY draws the UI from local memory (No Network Lag!)
         function renderSidebar(filter = '') {
             els.notesList.innerHTML = '';
-            
-            state.notes.filter(n => n.filename.toLowerCase().includes(filter.toLowerCase())).forEach(f => {
-                const icon = getIconData(f.filename); 
-                const isHtml = f.filename.toLowerCase().endsWith('.html') || f.filename.toLowerCase().endsWith('.htm');
+            // Added safe check (n.filename || '') to prevent missing filename crashes
+            state.notes.filter(n => (n.filename || '').toLowerCase().includes(filter.toLowerCase())).forEach(f => {
+                const fn = f.filename || 'Untitled';
+                const icon = getIconData(fn); 
+                const isHtml = fn.toLowerCase().endsWith('.html') || fn.toLowerCase().endsWith('.htm');
                 const textClass = isHtml ? 'text-html' : '';
 
                 const div = document.createElement('div');
@@ -567,20 +538,18 @@
                 div.innerHTML = `
                     <div class="note-icon ${icon.c}">${icon.i}</div>
                     <div class="note-info">
-                        <h3 class="${textClass}">${f.filename}</h3>
+                        <h3 class="${textClass}">${fn}</h3>
                         <p>${new Date(f.updatedAt).toLocaleDateString()}</p>
                     </div>`;
                 
                 div.onclick = async () => { 
                     if(!state.isDirty || await CustomDialog.confirm("Discard unsaved changes?")) {
                         await openFile(f.id); 
-                        // Auto-hide sidebar on mobile after selecting a file
                         if (window.innerWidth <= 768) {
                             document.getElementById('sidebar-container').classList.add('hidden');
                         }
                     }
                 }; 
-                
                 els.notesList.appendChild(div);
             });
         }
@@ -618,7 +587,6 @@
                 statSave.style.display = 'inline'; 
                 setTimeout(() => statSave.style.display = 'none', 3000);
                 
-                // Fetch fresh DB after a save to sync across devices
                 await fetchDatabase(); 
                 updatePreview();
             } catch(err) {
@@ -637,8 +605,6 @@
             setDirty(false); 
             updateMetrics(); 
             updatePreview(); 
-            
-            // Instantly render sidebar from memory (fixes the freeze!)
             renderSidebar(document.getElementById('search-input').value);
         }
 
@@ -653,14 +619,12 @@
             updateMetrics(); 
             els.editor.focus(); 
             updatePreview(); 
-            
-            // Instantly render sidebar from memory
             renderSidebar(document.getElementById('search-input').value);
         }
 
         function updateMetrics() {
             const lines = els.editor.value.split('\n'); 
-            const pos = els.editor.selectionStart; 
+            const pos = els.editor.selectionStart || 0; 
             const cursorLines = els.editor.value.substring(0, pos).split('\n'); 
             const row = cursorLines.length;
             
@@ -713,7 +677,6 @@
             }
         });
 
-        // --- PREVIEW FIXES ---
         const consoleInject = `<script>
             const _log = console.log, _err = console.error, _warn = console.warn;
             console.log = (...a) => { window.parent.postMessage({type:'log', msg:a.join(' ')}, '*'); _log(...a); };
@@ -751,9 +714,9 @@
             }
         }
 
-        // --- EXPORT, IMPORT & DELETE ---
-        document.getElementById('btn-import').onclick = async () => {
-            if(state.isDirty && !(await CustomDialog.confirm("You have unsaved changes. Discard them to open a new file?"))) return;
+        // Changed to strictly sync window.confirm to bypass Mobile Safari/Chrome security blocks for file inputs
+        document.getElementById('btn-import').onclick = () => {
+            if(state.isDirty && !window.confirm("You have unsaved changes. Discard them to open a new file?")) return;
             els.fileImport.click();
         };
 
@@ -818,7 +781,6 @@
             }
         };
 
-        // --- TAB & UI TOGGLES ---
         document.getElementById('tab-editor').onclick = () => { 
             document.getElementById('tab-editor').classList.add('active'); 
             document.getElementById('tab-preview').classList.remove('active'); 
@@ -881,7 +843,7 @@
                 const cmds = [ { n: 'Split Screen', a: () => document.getElementById('btn-split').click() }, { n: 'Toggle Terminal', a: () => document.getElementById('btn-console').click() }, { n: 'Export Workspace', a: () => document.getElementById('btn-backup').click() } ];
                 cmds.filter(c => c.n.toLowerCase().includes(q.substring(1).trim())).forEach(c => { const d = document.createElement('div'); d.className = 'cmd-item'; d.innerHTML = `<span>⚙️ ${c.n}</span>`; d.onclick = () => { c.a(); togglePalette(); }; els.cmdResults.appendChild(d); });
             } else { 
-                state.notes.filter(n => n.filename.toLowerCase().includes(q)).forEach(f => { const d = document.createElement('div'); d.className = 'cmd-item'; d.innerHTML = `<span>📄 ${f.filename}</span>`; d.onclick = async () => { if(!state.isDirty || await CustomDialog.confirm("Discard?")) openFile(f.id); togglePalette(); }; els.cmdResults.appendChild(d); });
+                state.notes.filter(n => (n.filename || '').toLowerCase().includes(q)).forEach(f => { const d = document.createElement('div'); d.className = 'cmd-item'; d.innerHTML = `<span>📄 ${f.filename || 'Untitled'}</span>`; d.onclick = async () => { if(!state.isDirty || await CustomDialog.confirm("Discard?")) openFile(f.id); togglePalette(); }; els.cmdResults.appendChild(d); });
             }
         }
         els.cmdInput.addEventListener('input', updatePalette);
@@ -897,7 +859,6 @@
             document.getElementById('btn-palette').onclick = togglePalette;
             document.getElementById('btn-launch').onclick = () => { const mimeType = els.filenameInput.value.endsWith('html') ? 'text/html' : 'text/plain'; window.open(URL.createObjectURL(new Blob([els.editor.value], { type: mimeType })), '_blank'); };
             
-            // Instantly filter sidebar from memory
             document.getElementById('search-input').addEventListener('input', (e) => renderSidebar(e.target.value));
             
             let isResizing = false; document.getElementById('resizer').onmousedown = () => isResizing = true;
@@ -915,6 +876,30 @@
             window.onbeforeunload = () => state.isDirty ? "Unsaved changes!" : null;
         }
 
+        // ==========================================
+        // 3. BOOT SEQUENCE (Runs last so variables exist)
+        // ==========================================
+        const MASTER_PASS = "DBP_236562_DBP_9827700975_DBP";
+
+        if (localStorage.getItem('dbp_auth') === 'true') {
+            loginOverlay.style.display = 'none';
+            initFirebaseApp();
+        }
+
+        loginBtn.addEventListener('click', () => {
+            if (loginPass.value === MASTER_PASS) {
+                localStorage.setItem('dbp_auth', 'true');
+                loginOverlay.style.display = 'none';
+                initFirebaseApp();
+            } else {
+                loginError.style.display = 'block';
+                loginPass.value = '';
+            }
+        });
+
+        loginPass.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') loginBtn.click();
+        });
     </script>
 </body>
-    </html>
+            </html>
