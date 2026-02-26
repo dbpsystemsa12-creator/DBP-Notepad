@@ -506,17 +506,28 @@
             }
         };
 
-        async function initFirebaseApp() { 
+              async function initFirebaseApp() { 
             DB.init(); 
-            await refreshSidebar(); 
+            
+            // 1. ACTIVATE BUTTONS FIRST. This stops the folder/sidebar from freezing!
             setupEvents(); 
             
-            if (state.notes.length > 0) {
-                await openFile(state.notes[0].id); 
-            } else {
-                await createNewFile(); 
+            // 2. Safely try to load the file you just saved
+            try {
+                await refreshSidebar(); 
+                
+                if (state.notes.length > 0) {
+                    await openFile(state.notes[0].id); 
+                } else {
+                    await createNewFile(); 
+                }
+            } catch (error) {
+                console.error("Firebase Load Error:", error);
+                CustomDialog.alert("Could not load the saved file. Starting with a blank page.");
+                await createNewFile();
             }
         }
+
 
         function setDirty(s) { 
             state.isDirty = s; 
