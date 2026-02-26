@@ -396,6 +396,7 @@
         const loginPass = document.getElementById('login-pass');
         const loginError = document.getElementById('login-error');
 
+        // 🚨 RACE CONDITION FIXED: We run this immediately, no 'load' wrapper needed.
         if (localStorage.getItem('dbp_auth') === 'true') {
             loginOverlay.style.display = 'none';
             initFirebaseApp();
@@ -506,17 +507,16 @@
             }
         };
 
-             async function initFirebaseApp() { 
+        async function initFirebaseApp() { 
             DB.init(); 
             
-            // 🚨 THE MAGIC SHIELD 🚨
-            // This turns on the Sidebar and Toolbar buttons IMMEDIATELY.
-            // Even if a text file takes too long to load, your buttons will NEVER freeze!
+            // 🚨 THIS STOPS THE FREEZE 🚨
+            // Boot up the UI buttons BEFORE we try to talk to the database.
             setupEvents(); 
             
-            // Safely load the database in the background
             try {
-                await refreshSidebar(); 
+                // Fetch from Firebase exactly ONE time on startup
+                await fetchDatabase(); 
                 
                 if (state.notes.length > 0) {
                     await openFile(state.notes[0].id); 
@@ -528,7 +528,6 @@
                 await createNewFile(); 
             }
         }
-
 
         function setDirty(s) { 
             state.isDirty = s; 
@@ -547,8 +546,14 @@
             return map[ext] || {i:'📄', c:''};
         }
 
-        async function refreshSidebar(filter = '') {
+        // DECOUPLED: This function ONLY downloads data from Firebase
+        async function fetchDatabase() {
             state.notes = await DB.getAll(); 
+            renderSidebar();
+        }
+
+        // DECOUPLED: This function ONLY draws the UI from local memory (No Network Lag!)
+        function renderSidebar(filter = '') {
             els.notesList.innerHTML = '';
             
             state.notes.filter(n => n.filename.toLowerCase().includes(filter.toLowerCase())).forEach(f => {
@@ -569,6 +574,7 @@
                 div.onclick = async () => { 
                     if(!state.isDirty || await CustomDialog.confirm("Discard unsaved changes?")) {
                         await openFile(f.id); 
+                        // Auto-hide sidebar on mobile after selecting a file
                         if (window.innerWidth <= 768) {
                             document.getElementById('sidebar-container').classList.add('hidden');
                         }
@@ -612,10 +618,11 @@
                 statSave.style.display = 'inline'; 
                 setTimeout(() => statSave.style.display = 'none', 3000);
                 
-                await refreshSidebar(document.getElementById('search-input').value); 
+                // Fetch fresh DB after a save to sync across devices
+                await fetchDatabase(); 
                 updatePreview();
             } catch(err) {
-                // Handled in DB.save
+                console.error(err);
             }
         }
 
@@ -631,7 +638,8 @@
             updateMetrics(); 
             updatePreview(); 
             
-            await refreshSidebar(document.getElementById('search-input').value);
+            // Instantly render sidebar from memory (fixes the freeze!)
+            renderSidebar(document.getElementById('search-input').value);
         }
 
         async function createNewFile() { 
@@ -646,7 +654,8 @@
             els.editor.focus(); 
             updatePreview(); 
             
-            await refreshSidebar(document.getElementById('search-input').value);
+            // Instantly render sidebar from memory
+            renderSidebar(document.getElementById('search-input').value);
         }
 
         function updateMetrics() {
@@ -793,7 +802,7 @@
                     const data = JSON.parse(ev.target.result); 
                     if(!(await CustomDialog.confirm("This will merge with your current Firebase files. Proceed?"))) return;
                     for(let f of data) await DB.save(f); 
-                    await refreshSidebar(); 
+                    await fetchDatabase(); 
                     CustomDialog.alert("Workspace Restored to Cloud!");
                 } catch(err) { CustomDialog.alert("Invalid .dbp backup file."); }
             }; reader.readAsText(file);
@@ -804,6 +813,7 @@
             if(await CustomDialog.confirm(`Permanently delete "${els.filenameInput.value}" from the cloud?`)) { 
                 await DB.delete(state.currentId); 
                 await CustomDialog.alert(`File deleted.`);
+                await fetchDatabase();
                 await createNewFile(); 
             }
         };
@@ -843,7 +853,6 @@
                 document.getElementById('tab-preview').classList.add('active'); 
                 els.splitContainer.classList.add('split-mode'); 
                 els.editorWrapper.style.display = 'flex';
-                // Handled in CSS media queries for mobile vs desktop
                 if (window.innerWidth > 768) {
                     els.editorWrapper.style.width = '50%';
                     els.previewWrapper.style.width = '50%';
@@ -887,7 +896,9 @@
             document.getElementById('btn-toggle-sidebar').onclick = () => document.getElementById('sidebar-container').classList.toggle('hidden');
             document.getElementById('btn-palette').onclick = togglePalette;
             document.getElementById('btn-launch').onclick = () => { const mimeType = els.filenameInput.value.endsWith('html') ? 'text/html' : 'text/plain'; window.open(URL.createObjectURL(new Blob([els.editor.value], { type: mimeType })), '_blank'); };
-            document.getElementById('search-input').addEventListener('input', (e) => refreshSidebar(e.target.value));
+            
+            // Instantly filter sidebar from memory
+            document.getElementById('search-input').addEventListener('input', (e) => renderSidebar(e.target.value));
             
             let isResizing = false; document.getElementById('resizer').onmousedown = () => isResizing = true;
             document.onmousemove = (e) => { if(isResizing && e.clientX > 200 && e.clientX < 500 && window.innerWidth > 768) document.documentElement.style.setProperty('--sidebar-width', `${e.clientX}px`); };
