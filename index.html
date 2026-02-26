@@ -506,13 +506,15 @@
             }
         };
 
-              async function initFirebaseApp() { 
+             async function initFirebaseApp() { 
             DB.init(); 
             
-            // 1. ACTIVATE BUTTONS FIRST. This stops the folder/sidebar from freezing!
+            // 🚨 THE MAGIC SHIELD 🚨
+            // This turns on the Sidebar and Toolbar buttons IMMEDIATELY.
+            // Even if a text file takes too long to load, your buttons will NEVER freeze!
             setupEvents(); 
             
-            // 2. Safely try to load the file you just saved
+            // Safely load the database in the background
             try {
                 await refreshSidebar(); 
                 
@@ -523,8 +525,7 @@
                 }
             } catch (error) {
                 console.error("Firebase Load Error:", error);
-                CustomDialog.alert("Could not load the saved file. Starting with a blank page.");
-                await createNewFile();
+                await createNewFile(); 
             }
         }
 
