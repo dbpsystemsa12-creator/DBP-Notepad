@@ -3,17 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DBP | Notepad</title>
+    <title>DBP | Notepad Workspace</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <style>
         /* =========================================
-           ROOT VARIABLES & MASTER RESET
+           ROOT VARIABLES & GLASSMORPHISM BASE
            ========================================= */
         :root {
-            --bg-master: linear-gradient(357deg, #000000, #1c1c1c);
-            --panel-bg: rgba(15, 15, 18, 0.85);
-            --toolbar-bg: rgba(10, 10, 12, 0.95);
-            --border-color: rgba(255, 255, 255, 0.1);
+            /* Base Requested Radial Gradient */
+            --bg-master: radial-gradient(circle, #332e2e, #000000);
+            
+            /* Glassmorphism Variables */
+            --glass-bg: rgba(20, 20, 20, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            --glass-blur: blur(12px);
+            
             --accent-main: #00d2ff;
             --accent-glow: rgba(0, 210, 255, 0.4);
             --text-primary: #f8fafc;
@@ -21,17 +26,17 @@
             --danger: #ff4757;
             --success: #2ed573;
             --warning: #ffa502;
+            
             --font-mono: 'Fira Code', 'JetBrains Mono', Consolas, monospace;
             --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            --sidebar-width: 260px;
+            --sidebar-width: 280px;
             --editor-font-size: 14px;
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            --radius-sm: 6px;
         }
 
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             background: var(--bg-master); 
@@ -40,6 +45,16 @@
             height: 100vh; 
             display: flex; 
             overflow: hidden; 
+            transition: background 0.5s ease;
+        }
+
+        /* Glass Utility Class */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
         }
 
         /* =========================================
@@ -47,157 +62,191 @@
            ========================================= */
         #login-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999; display: flex;
+            background: var(--bg-master); z-index: 9999; display: flex;
             flex-direction: column; align-items: center; justify-content: center;
         }
         .login-box {
-            background: var(--panel-bg); padding: 40px; border-radius: 12px;
-            border: 1px solid var(--accent-main); box-shadow: 0 0 30px var(--accent-glow);
+            padding: 40px; border-radius: var(--radius-lg);
+            border: 1px solid var(--accent-main); box-shadow: 0 0 40px var(--accent-glow);
             text-align: center; width: 90%; max-width: 400px;
         }
-        .login-box h1 { margin-bottom: 20px; font-size: 1.5rem; letter-spacing: 2px; }
-        .login-box h1 span { color: var(--accent-main); }
+        .login-box h1 { margin-bottom: 25px; font-size: 1.6rem; letter-spacing: 2px; }
+        .login-box h1 span { color: var(--accent-main); text-shadow: 0 0 10px var(--accent-glow); transition: 0.3s; }
         .login-input {
-            width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 6px;
-            background: rgba(0,0,0,0.5); border: 1px solid var(--border-color);
+            width: 100%; padding: 14px; margin-bottom: 20px; border-radius: var(--radius-md);
+            background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
             color: #fff; outline: none; text-align: center; font-family: var(--font-mono);
+            transition: all 0.3s ease;
         }
-        .login-input:focus { border-color: var(--accent-main); }
+        .login-input:focus { border-color: var(--accent-main); box-shadow: 0 0 15px rgba(0, 210, 255, 0.2); }
         .login-btn {
-            width: 100%; padding: 12px; border: none; border-radius: 6px;
+            width: 100%; padding: 14px; border: none; border-radius: var(--radius-md);
             background: var(--accent-main); color: #000; font-weight: bold; cursor: pointer;
-            transition: 0.2s;
+            transition: 0.3s; font-size: 1rem;
         }
-        .login-btn:hover { box-shadow: 0 0 15px var(--accent-glow); }
+        .login-btn:hover { box-shadow: 0 0 20px var(--accent-glow); transform: translateY(-2px); }
         #login-error { color: var(--danger); margin-top: 15px; font-size: 0.9rem; display: none; }
 
         /* =========================================
            SIDEBAR & FILE EXPLORER
            ========================================= */
         #sidebar-container { 
-            display: flex; height: 100%; z-index: 20; 
+            display: flex; height: 100%; z-index: 20; padding: 10px;
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
         }
         #sidebar-container.hidden { transform: translateX(-100%); position: absolute; }
 
         #sidebar { 
-            width: var(--sidebar-width); min-width: 200px; max-width: 500px; 
-            background: var(--panel-bg); border-right: 1px solid var(--border-color); 
-            display: flex; flex-direction: column; backdrop-filter: blur(15px); 
+            width: var(--sidebar-width); min-width: 220px; max-width: 500px; 
+            border-radius: var(--radius-lg);
+            display: flex; flex-direction: column; overflow: hidden;
+            margin-right: 5px;
         }
         
         .resizer { 
-            width: 4px; background: transparent; cursor: col-resize; z-index: 100; transition: background 0.2s; 
+            width: 6px; background: transparent; cursor: col-resize; z-index: 100; transition: 0.2s; 
+            border-radius: 10px; margin-left: 5px;
         }
-        .resizer:hover, .resizer.active { background: var(--accent-main); box-shadow: 0 0 10px var(--accent-glow); }
+        .resizer:hover, .resizer.active { background: var(--accent-glow); }
 
-        .sidebar-header { padding: 20px 15px 15px; border-bottom: 1px solid var(--border-color); }
+        .sidebar-header { padding: 20px 15px 15px; border-bottom: 1px solid var(--glass-border); }
         .brand { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
         .brand h1 { font-size: 1.1rem; font-weight: 800; letter-spacing: 1px; color: #fff; }
-        .brand span { color: var(--accent-main); }
+        .brand span { color: var(--accent-main); transition: 0.3s; }
         
         .search-box { 
-            width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.5); 
-            border: 1px solid var(--border-color); border-radius: 6px; 
+            width: 100%; padding: 10px 12px; background: rgba(0,0,0,0.3); 
+            border: 1px solid var(--glass-border); border-radius: var(--radius-md); 
             color: var(--text-primary); font-size: 0.85rem; outline: none; transition: 0.2s; 
         }
         .search-box:focus { border-color: var(--accent-main); }
 
-        .sidebar-actions { display: flex; gap: 5px; margin-top: 10px; }
+        .sidebar-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
         .sidebar-btn { 
-            flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); 
-            color: var(--text-secondary); padding: 5px; border-radius: 4px; cursor: pointer; 
-            font-size: 0.8rem; transition: 0.2s; 
+            flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); 
+            color: var(--text-primary); padding: 8px; border-radius: var(--radius-sm); cursor: pointer; 
+            font-size: 0.8rem; transition: 0.2s; min-width: 45%;
         }
-        .sidebar-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
-        .sidebar-btn.primary { color: var(--accent-main); border-color: rgba(0,210,255,0.3); }
+        .sidebar-btn:hover { background: rgba(255,255,255,0.1); }
+        .sidebar-btn.primary { color: var(--accent-main); border-color: rgba(0,210,255,0.3); background: rgba(0,210,255,0.05); }
         .sidebar-btn.primary:hover { background: var(--accent-main); color: #000; }
 
         #notes-list { flex-grow: 1; overflow-y: auto; padding: 10px; }
+        
+        /* FOLDER STYLES */
+        .folder-group { margin-bottom: 8px; }
+        .folder-header {
+            display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+            cursor: pointer; border-radius: var(--radius-sm); color: var(--text-primary);
+            font-size: 0.9rem; font-weight: bold; transition: 0.2s; background: rgba(0,0,0,0.2);
+            border: 1px solid transparent;
+        }
+        .folder-header:hover { background: rgba(0,0,0,0.4); border-color: var(--glass-border); }
+        .folder-icon { color: var(--warning); font-size: 1.1rem; transition: transform 0.2s; }
+        .folder-group.collapsed .folder-contents { display: none; }
+        .folder-group.collapsed .folder-icon { transform: rotate(-90deg); }
+        .folder-contents { padding-left: 12px; margin-top: 4px; border-left: 1px dashed var(--glass-border); margin-left: 15px; }
+
         .note-card { 
-            border-radius: 6px; padding: 8px 12px; margin-bottom: 4px; cursor: pointer; 
+            border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 4px; cursor: pointer; 
             display: flex; gap: 10px; align-items: center; transition: all 0.2s; border: 1px solid transparent; 
         }
-        .note-card:hover { background: rgba(255,255,255,0.05); }
+        .note-card:hover { background: rgba(255,255,255,0.08); }
         .note-card.active { 
-            background: rgba(0, 210, 255, 0.08); border-color: rgba(0, 210, 255, 0.4); 
-            border-left: 3px solid var(--accent-main);
+            background: rgba(0, 210, 255, 0.1); border-color: rgba(0, 210, 255, 0.3); 
+            border-right: 3px solid var(--accent-main); 
         }
-        .note-icon { font-size: 1.3rem; }
+        .note-icon { font-size: 1.2rem; }
         .note-info { overflow: hidden; flex-grow: 1; }
         .note-info h3 { font-size: 0.85rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #e2e8f0; }
         .note-info p { font-size: 0.65rem; color: var(--text-secondary); margin-top: 2px; }
 
+        /* File Colors */
         .ext-html { color: #2ed573; text-shadow: 0 0 8px rgba(46, 213, 115, 0.6); }
         .text-html { color: #2ed573 !important; font-weight: bold !important; text-shadow: 0 0 5px rgba(46, 213, 115, 0.3); }
-        .ext-css { color: #3498db; } .ext-js { color: #f1c40f; } .ext-json { color: #00d2ff; } 
+        .ext-css { color: #3498db; } .ext-js { color: #f1c40f; } .ext-json { color: var(--accent-main); transition: 0.3s;} 
         .ext-md { color: #9b59b6; } .ext-ino { color: #00979D; } .ext-py { color: #e67e22; }
 
         /* =========================================
            MAIN WORKSPACE & TOOLBAR
            ========================================= */
-        #workspace { flex-grow: 1; display: flex; flex-direction: column; min-width: 0; background: rgba(0,0,0,0.4); }
-
-        .tabs { display: flex; background: var(--toolbar-bg); border-bottom: 1px solid var(--border-color); padding-top: 5px; }
-        .tab { 
-            padding: 10px 20px; color: var(--text-secondary); cursor: pointer; border-radius: 6px 6px 0 0; 
-            font-size: 0.85rem; user-select: none; margin-left: 5px; border-bottom: 2px solid transparent; 
+        #workspace-container {
+            flex-grow: 1; display: flex; flex-direction: column; padding: 10px 10px 10px 0; min-width: 0;
         }
-        .tab:hover { color: var(--text-primary); background: rgba(255,255,255,0.03); }
-        .tab.active { color: var(--accent-main); background: rgba(0, 210, 255, 0.05); border-bottom-color: var(--accent-main); }
-        .toggle-sidebar { margin-left: auto; background: transparent; color: var(--text-secondary); border: none; cursor: pointer; padding: 0 15px; font-size: 1.2rem; }
+        #workspace { 
+            flex-grow: 1; display: flex; flex-direction: column; border-radius: var(--radius-lg); 
+            overflow: hidden; 
+        }
+
+        .tabs { display: flex; border-bottom: 1px solid var(--glass-border); padding-top: 8px; padding-left: 10px; background: rgba(0,0,0,0.2); }
+        .tab { 
+            padding: 10px 20px; color: var(--text-secondary); cursor: pointer; border-radius: var(--radius-md) var(--radius-md) 0 0; 
+            font-size: 0.85rem; user-select: none; margin-right: 5px; border-bottom: 2px solid transparent; transition: 0.2s;
+        }
+        .tab:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+        .tab.active { color: var(--accent-main); background: rgba(0, 210, 255, 0.08); border-bottom-color: var(--accent-main); }
+        .toggle-sidebar { margin-left: auto; background: transparent; color: var(--text-secondary); border: none; cursor: pointer; padding: 0 15px; font-size: 1.2rem; transition: 0.2s; }
+        .toggle-sidebar:hover { color: #fff; text-shadow: 0 0 10px #fff; }
 
         .toolbar { 
-            padding: 8px 15px; background: rgba(15,15,18,0.8); border-bottom: 1px solid var(--border-color); 
-            display: flex; align-items: center; gap: 6px; 
+            padding: 10px 15px; border-bottom: 1px solid var(--glass-border); 
+            display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.2);
         }
         .filename-input { 
-            background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); color: var(--accent-main); 
-            padding: 6px 12px; border-radius: 4px; font-family: var(--font-mono); font-size: 0.9rem; width: 200px; outline: none; font-weight: bold; 
+            background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); color: var(--accent-main); 
+            padding: 8px 12px; border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 0.9rem; width: 180px; outline: none; font-weight: bold; transition: 0.2s;
         }
-        .filename-input:focus { border-color: var(--accent-main); }
+        .filename-input:focus { border-color: var(--accent-main); box-shadow: 0 0 10px rgba(0, 210, 255, 0.2); }
+        
+        .folder-select {
+            background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); color: var(--text-primary);
+            padding: 8px 12px; border-radius: var(--radius-md); font-family: var(--font-sans); font-size: 0.85rem; outline: none; cursor: pointer;
+            transition: 0.2s; max-width: 140px;
+        }
+        .folder-select:focus { border-color: var(--accent-main); }
+        .folder-select option { background: #0f172a; color: #fff; }
+
         .unsaved-dot { height: 8px; width: 8px; background: var(--danger); border-radius: 50%; margin-left: 8px; display: none; box-shadow: 0 0 8px var(--danger); }
-        .divider { width: 1px; height: 18px; background: var(--border-color); margin: 0 5px; }
+        .divider { width: 1px; height: 20px; background: var(--glass-border); margin: 0 5px; }
         
         .icon-btn { 
-            background: transparent; color: var(--text-secondary); border: none; border-radius: 4px; 
-            height: 32px; min-width: 32px; display: flex; align-items: center; justify-content: center; 
-            cursor: pointer; font-size: 1.1rem; transition: 0.2s; position: relative; 
+            background: rgba(255,255,255,0.03); color: var(--text-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); 
+            height: 36px; min-width: 36px; display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; font-size: 1.1rem; transition: all 0.2s ease; position: relative; 
         }
-        .icon-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
-        .icon-btn.danger:hover { background: rgba(255, 71, 87, 0.15); color: var(--danger); }
-        .icon-btn.primary { color: var(--accent-main); }
-        .icon-btn.primary:hover { background: rgba(0, 210, 255, 0.15); }
-        .icon-btn.active { background: rgba(0, 210, 255, 0.2); color: var(--accent-main); }
+        .icon-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .icon-btn.danger:hover { background: rgba(255, 71, 87, 0.15); color: var(--danger); border-color: rgba(255, 71, 87, 0.4); }
+        .icon-btn.primary { color: var(--accent-main); border-color: rgba(0, 210, 255, 0.3); }
+        .icon-btn.primary:hover { background: rgba(0, 210, 255, 0.15); box-shadow: 0 0 15px rgba(0, 210, 255, 0.2); }
+        .icon-btn.active { background: rgba(0, 210, 255, 0.2); color: var(--accent-main); border-color: var(--accent-main); }
         
-        /* Tooltips hidden on touch/mobile logic handled via media query */
         .icon-btn::after { 
-            content: attr(data-tooltip); position: absolute; bottom: -30px; left: 50%; 
-            transform: translateX(-50%) scale(0.9); background: #000; color: #fff; font-size: 0.75rem; 
-            padding: 4px 8px; border-radius: 4px; white-space: nowrap; opacity: 0; pointer-events: none; 
-            transition: 0.2s; z-index: 100; border: 1px solid var(--border-color); 
+            content: attr(data-tooltip); position: absolute; bottom: -35px; left: 50%; 
+            transform: translateX(-50%) scale(0.9); background: var(--glass-bg); backdrop-filter: var(--glass-blur); color: #fff; font-size: 0.75rem; 
+            padding: 6px 10px; border-radius: var(--radius-sm); white-space: nowrap; opacity: 0; pointer-events: none; 
+            transition: 0.2s; z-index: 100; border: 1px solid var(--glass-border); box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         }
         .icon-btn:hover::after { opacity: 1; transform: translateX(-50%) scale(1); }
 
         /* =========================================
            SPLIT VIEW & EDITOR
            ========================================= */
-        .workspace-core { flex-grow: 1; display: flex; overflow: hidden; flex-direction: column; }
+        .workspace-core { flex-grow: 1; display: flex; overflow: hidden; flex-direction: column; background: rgba(0,0,0,0.2); }
         .split-container { flex-grow: 1; display: flex; overflow: hidden; }
         
         .editor-wrapper, .preview-wrapper { display: flex; flex-grow: 1; position: relative; width: 100%; }
         .preview-wrapper { display: none; background: #fff; }
         
-        .split-mode .editor-wrapper { width: 50%; border-right: 1px solid var(--border-color); }
+        .split-mode .editor-wrapper { width: 50%; border-right: 1px solid var(--glass-border); }
         .split-mode .preview-wrapper { width: 50%; display: flex; }
 
         .line-numbers { 
-            width: 50px; min-width: 50px; background: rgba(0,0,0,0.3); border-right: 1px solid var(--border-color); 
+            width: 55px; min-width: 55px; background: rgba(0,0,0,0.3); border-right: 1px solid var(--glass-border); 
             padding: 20px 0; text-align: right; color: #475569; font-family: var(--font-mono); 
             font-size: var(--editor-font-size); line-height: 1.6; user-select: none; overflow: hidden; 
         }
-        .line-numbers span { display: block; padding-right: 12px; }
-        .line-numbers span.active-line { color: #fff; background: rgba(255,255,255,0.05); border-right: 2px solid var(--accent-main); }
+        .line-numbers span { display: block; padding-right: 15px; }
+        .line-numbers span.active-line { color: var(--accent-main); background: rgba(0, 210, 255, 0.05); border-right: 2px solid var(--accent-main); font-weight: bold;}
 
         #editor { 
             flex-grow: 1; padding: 20px; font-size: var(--editor-font-size); line-height: 1.6; 
@@ -210,64 +259,67 @@
         /* =========================================
            TERMINAL / CONSOLE
            ========================================= */
-        #terminal-panel { height: 150px; border-top: 1px solid var(--border-color); background: #0a0a0c; display: none; flex-direction: column; }
-        .terminal-header { padding: 4px 10px; background: rgba(255,255,255,0.05); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-secondary); }
-        .terminal-output { flex-grow: 1; padding: 10px; overflow-y: auto; font-family: var(--font-mono); font-size: calc(var(--editor-font-size) - 2px); }
-        .log-line { border-bottom: 1px solid rgba(255,255,255,0.05); padding: 3px 0; }
-        .log-error { color: var(--danger); background: rgba(255,71,87,0.1); }
+        #terminal-panel { height: 180px; border-top: 1px solid var(--glass-border); display: none; flex-direction: column; }
+        .terminal-header { padding: 8px 15px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; font-size: 0.8rem; font-family: var(--font-mono); color: var(--text-secondary); }
+        .terminal-output { flex-grow: 1; padding: 10px; overflow-y: auto; font-family: var(--font-mono); font-size: calc(var(--editor-font-size) - 1px); background: rgba(0,0,0,0.5); }
+        .log-line { border-bottom: 1px dashed rgba(255,255,255,0.05); padding: 4px 0; }
+        .log-error { color: var(--danger); background: rgba(255,71,87,0.05); }
         .log-warn { color: var(--warning); }
         .log-info { color: var(--accent-main); }
-        .terminal-clear { cursor: pointer; color: var(--text-secondary); } 
-        .terminal-clear:hover { color: #fff; }
+        .terminal-clear { cursor: pointer; color: var(--text-secondary); transition: 0.2s; } 
+        .terminal-clear:hover { color: var(--danger); }
 
         /* =========================================
            STATUS BAR
            ========================================= */
-        .status-bar { background: var(--toolbar-bg); border-top: 1px solid var(--border-color); padding: 4px 15px; display: flex; justify-content: space-between; font-size: 0.75rem; color: #64748b; font-family: var(--font-mono); }
+        .status-bar { border-top: 1px solid var(--glass-border); padding: 6px 15px; display: flex; justify-content: space-between; font-size: 0.75rem; color: #64748b; font-family: var(--font-mono); background: rgba(0,0,0,0.2); }
         .status-left span, .status-right span { margin-right: 15px; } 
         .status-right span { margin-left: 15px; margin-right: 0; }
-        .dbp-tag { color: #000; font-weight: bold; background: var(--accent-main); padding: 1px 8px; border-radius: 4px; }
+        .dbp-tag { color: #000; font-weight: bold; background: var(--accent-main); padding: 2px 10px; border-radius: var(--radius-sm); box-shadow: 0 0 10px var(--accent-glow); transition: 0.3s; }
 
         /* =========================================
            MODALS, ALERTS & SCROLLBARS
            ========================================= */
         ::-webkit-scrollbar { width: 8px; height: 8px; } 
         ::-webkit-scrollbar-track { background: transparent; } 
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0, 210, 255, 0.3); }
 
-        .cmd-palette { display: none; position: fixed; top: 15%; left: 50%; transform: translateX(-50%); width: 500px; background: rgba(15,15,20,0.95); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.9); z-index: 200; flex-direction: column; }
-        .cmd-input { width: 100%; padding: 15px; background: transparent; border: none; border-bottom: 1px solid var(--border-color); color: #fff; outline: none; font-family: var(--font-sans); }
-        .cmd-results { max-height: 300px; overflow-y: auto; } 
-        .cmd-item { padding: 10px 15px; color: var(--text-secondary); cursor: pointer; display: flex; justify-content: space-between; } 
-        .cmd-item:hover { background: var(--accent-main); color: #000; }
+        .cmd-palette { display: none; position: fixed; top: 15%; left: 50%; transform: translateX(-50%); width: 500px; border-radius: var(--radius-lg); z-index: 200; flex-direction: column; overflow: hidden; }
+        .cmd-input { width: 100%; padding: 18px; background: rgba(0,0,0,0.4); border: none; border-bottom: 1px solid var(--glass-border); color: #fff; outline: none; font-family: var(--font-sans); font-size: 1rem; }
+        .cmd-results { max-height: 300px; overflow-y: auto; background: rgba(0,0,0,0.2); } 
+        .cmd-item { padding: 12px 18px; color: var(--text-secondary); cursor: pointer; display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.02); transition: 0.2s; } 
+        .cmd-item:hover { background: rgba(0, 210, 255, 0.1); color: #fff; padding-left: 22px; border-left: 3px solid var(--accent-main); }
 
         .dialog-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; }
-        .dialog-box { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 25px; width: 350px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); text-align: center; font-family: var(--font-sans); }
-        .dialog-box h3 { margin-bottom: 10px; color: #fff; font-size: 1.2rem; }
-        .dialog-box p { margin-bottom: 20px; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5; }
+        .dialog-box { border-radius: var(--radius-lg); padding: 30px; width: 380px; text-align: center; font-family: var(--font-sans); }
+        .dialog-box h3 { margin-bottom: 15px; color: #fff; font-size: 1.3rem; }
+        .dialog-box p { margin-bottom: 25px; color: var(--text-secondary); font-size: 1rem; line-height: 1.5; }
         .dialog-actions { display: flex; justify-content: center; gap: 15px; }
-        .dialog-btn { padding: 8px 20px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .cancel-btn { background: rgba(255,255,255,0.1); color: #fff; }
-        .cancel-btn:hover { background: rgba(255,255,255,0.2); }
-        .confirm-btn { background: var(--accent-main); color: #000; }
-        .confirm-btn:hover { background: var(--accent-glow); color: #fff; }
+        .dialog-btn { padding: 10px 25px; border-radius: var(--radius-md); border: none; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 0.9rem; }
+        .cancel-btn { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--glass-border); }
+        .cancel-btn:hover { background: rgba(255,255,255,0.15); }
+        .confirm-btn { background: var(--accent-main); color: #000; box-shadow: 0 0 15px var(--accent-glow); }
+        .confirm-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px var(--accent-glow); }
 
         /* =========================================
            MOBILE OPTIMIZATIONS
            ========================================= */
         @media (max-width: 768px) {
-            #sidebar-container { position: absolute; left: 0; top: 0; height: 100vh; transform: translateX(-100%); transition: 0.3s; }
-            #sidebar-container:not(.hidden) { transform: translateX(0); box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
-            #sidebar { width: 280px; max-width: 85vw; }
+            #workspace-container { padding: 0; }
+            #sidebar-container { position: absolute; left: 0; top: 0; height: 100vh; transform: translateX(-100%); transition: 0.3s; padding: 0; }
+            #sidebar-container:not(.hidden) { transform: translateX(0); box-shadow: 10px 0 40px rgba(0,0,0,0.8); }
+            #sidebar { width: 280px; max-width: 85vw; border-radius: 0; margin-right: 0; }
+            #workspace { border-radius: 0; border: none; }
             .resizer { display: none; } 
             
-            .toolbar { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 10px; }
-            .filename-input { width: 140px; }
+            .toolbar { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 12px; }
+            .filename-input, .folder-select { min-width: 120px; }
             .icon-btn::after { display: none !important; } 
             
             .split-container.split-mode { flex-direction: column; }
             .split-mode .editor-wrapper, .split-mode .preview-wrapper { width: 100% !important; height: 50%; border-right: none; }
-            .split-mode .editor-wrapper { border-bottom: 1px solid var(--border-color); }
+            .split-mode .editor-wrapper { border-bottom: 1px solid var(--glass-border); }
             
             .cmd-palette { width: 90%; top: 10%; }
             .status-bar .status-left span:nth-child(2), .status-bar .status-left span:nth-child(3) { display: none; }
@@ -277,7 +329,7 @@
 <body>
 
     <div id="login-overlay">
-        <div class="login-box">
+        <div class="login-box glass-panel">
             <h1>DBP <span>Authenticator</span></h1>
             <input type="password" id="login-pass" class="login-input" placeholder="Enter Master Key">
             <button id="login-btn" class="login-btn">Unlock Workspace</button>
@@ -286,7 +338,7 @@
     </div>
 
     <div id="custom-dialog-overlay" class="dialog-overlay">
-        <div class="dialog-box">
+        <div class="dialog-box glass-panel">
             <h3 id="dialog-title">Notice</h3>
             <p id="dialog-message"></p>
             <div class="dialog-actions">
@@ -295,8 +347,19 @@
             </div>
         </div>
     </div>
+    
+    <div id="prompt-dialog-overlay" class="dialog-overlay">
+        <div class="dialog-box glass-panel">
+            <h3 id="prompt-title">Enter Value</h3>
+            <input type="text" id="prompt-input" class="login-input" style="margin-bottom: 20px;">
+            <div class="dialog-actions">
+                <button id="prompt-btn-cancel" class="dialog-btn cancel-btn">Cancel</button>
+                <button id="prompt-btn-confirm" class="dialog-btn confirm-btn">Create</button>
+            </div>
+        </div>
+    </div>
 
-    <div id="cmd-palette" class="cmd-palette">
+    <div id="cmd-palette" class="cmd-palette glass-panel">
         <input type="text" id="cmd-input" class="cmd-input" placeholder="Search or type '>' for commands...">
         <div id="cmd-results" class="cmd-results"></div>
     </div>
@@ -305,12 +368,13 @@
     <input type="file" id="file-restore" style="display:none" accept=".dbp,.json">
 
     <div id="sidebar-container" class="hidden">
-        <aside id="sidebar">
+        <aside id="sidebar" class="glass-panel">
             <div class="sidebar-header">
                 <div class="brand"><h1>DBP <span>Notepad</span></h1></div>
                 <input type="text" id="search-input" class="search-box" placeholder="Search Database...">
                 <div class="sidebar-actions">
-                    <button class="sidebar-btn primary" id="btn-new">+ New File</button>
+                    <button class="sidebar-btn primary" id="btn-new">+ File</button>
+                    <button class="sidebar-btn primary" id="btn-new-folder" style="color: var(--warning); border-color: rgba(255, 165, 2, 0.3); background: rgba(255, 165, 2, 0.05);">+ Folder</button>
                     <button class="sidebar-btn" id="btn-backup" title="Backup Entire Workspace">📦 Export DB</button>
                     <button class="sidebar-btn" id="btn-restore" title="Restore Workspace">📥 Load DB</button>
                 </div>
@@ -320,76 +384,116 @@
         <div class="resizer" id="resizer"></div>
     </div>
 
-    <main id="workspace">
-        <div class="tabs">
-            <div class="tab active" id="tab-editor">Editor</div>
-            <div class="tab" id="tab-preview">Preview</div>
-            <button class="toggle-sidebar" id="btn-toggle-sidebar" title="Toggle Sidebar">🗂️</button>
-        </div>
+    <div id="workspace-container">
+        <main id="workspace" class="glass-panel">
+            <div class="tabs">
+                <div class="tab active" id="tab-editor">Editor</div>
+                <div class="tab" id="tab-preview">Preview</div>
+                <button class="toggle-sidebar" id="btn-toggle-sidebar" title="Toggle Sidebar">🗂️</button>
+            </div>
 
-        <div class="toolbar">
-            <input type="text" id="filename-input" class="filename-input" placeholder="untitled.html">
-            <div class="unsaved-dot" id="unsaved-indicator"></div>
-            <div class="divider"></div>
-            
-            <button class="icon-btn primary" id="btn-launch" data-tooltip="Launch in Browser">🚀</button>
-            <button class="icon-btn" id="btn-import" data-tooltip="Open Local File">📂</button>
-            <button class="icon-btn" id="btn-save" data-tooltip="Sync to Firebase (Ctrl+S)">💾</button>
-            <button class="icon-btn" id="btn-export" data-tooltip="Download as Single File">📥</button>
-            <button class="icon-btn danger" id="btn-delete" data-tooltip="Permanently Delete File">🗑️</button>
-            
-            <div class="divider"></div>
-            <button class="icon-btn" id="btn-split" data-tooltip="Split Screen Mode">◨</button>
-            <button class="icon-btn" id="btn-console" data-tooltip="Toggle Terminal">📟</button>
-            <button class="icon-btn" id="btn-wrap" data-tooltip="Toggle Word Wrap">🔄</button>
-            <button class="icon-btn" id="btn-palette" data-tooltip="Command Palette (Ctrl+P)">⌨️</button>
+            <div class="toolbar">
+                <input type="text" id="filename-input" class="filename-input" placeholder="untitled.html">
+                
+                <select id="folder-select" class="folder-select" title="Assign to Folder">
+                    <option value="root">/ Root</option>
+                </select>
 
-            <div class="divider"></div>
-            <button class="icon-btn" id="btn-zoom-out" data-tooltip="Decrease Font Size">A-</button>
-            <button class="icon-btn" id="btn-zoom-in" data-tooltip="Increase Font Size">A+</button>
-        </div>
+                <div class="unsaved-dot" id="unsaved-indicator"></div>
+                <div class="divider"></div>
+                
+                <button class="icon-btn primary" id="btn-launch" data-tooltip="Launch in Browser">🚀</button>
+                <button class="icon-btn" id="btn-import" data-tooltip="Open Local File">📂</button>
+                <button class="icon-btn" id="btn-save" data-tooltip="Sync to Firebase (Ctrl+S)">💾</button>
+                <button class="icon-btn" id="btn-export" data-tooltip="Download as Single File">📥</button>
+                <button class="icon-btn danger" id="btn-delete" data-tooltip="Permanently Delete File">🗑️</button>
+                
+                <div class="divider"></div>
+                <button class="icon-btn" id="btn-split" data-tooltip="Split Screen Mode">◨</button>
+                <button class="icon-btn" id="btn-console" data-tooltip="Toggle Terminal">📟</button>
+                <button class="icon-btn" id="btn-wrap" data-tooltip="Toggle Word Wrap">🔄</button>
+                <button class="icon-btn" id="btn-palette" data-tooltip="Command Palette (Ctrl+P)">⌨️</button>
 
-        <div class="workspace-core">
-            <div class="split-container" id="split-container">
-                <div class="editor-wrapper" id="editor-wrapper">
-                    <div class="line-numbers" id="line-numbers"></div>
-                    <textarea id="editor" spellcheck="false" placeholder="Write logic here... Try typing '!html' or 'clg' and press Tab!"></textarea>
+                <div class="divider" style="margin-left: auto;"></div>
+                
+                <button class="icon-btn" id="btn-theme" data-tooltip="Cycle Theme">🎨</button>
+                
+                <button class="icon-btn" id="btn-zoom-out" data-tooltip="Decrease Font Size">A-</button>
+                <button class="icon-btn" id="btn-zoom-in" data-tooltip="Increase Font Size">A+</button>
+            </div>
+
+            <div class="workspace-core">
+                <div class="split-container" id="split-container">
+                    <div class="editor-wrapper" id="editor-wrapper">
+                        <div class="line-numbers" id="line-numbers"></div>
+                        <textarea id="editor" spellcheck="false" placeholder="Write logic here... Try typing '!html' or 'clg' and press Tab!"></textarea>
+                    </div>
+                    <div class="preview-wrapper" id="preview-wrapper">
+                        <iframe id="preview-frame" sandbox="allow-scripts allow-modals"></iframe>
+                        <div id="preview-text"></div>
+                    </div>
                 </div>
-                <div class="preview-wrapper" id="preview-wrapper">
-                    <iframe id="preview-frame" sandbox="allow-scripts allow-modals"></iframe>
-                    <div id="preview-text"></div>
+                
+                <div id="terminal-panel" class="glass-panel">
+                    <div class="terminal-header">
+                        <span>DBP Console Output</span>
+                        <span class="terminal-clear" onclick="document.getElementById('terminal-output').innerHTML=''">🚫 Clear</span>
+                    </div>
+                    <div class="terminal-output" id="terminal-output"></div>
                 </div>
             </div>
-            
-            <div id="terminal-panel">
-                <div class="terminal-header">
-                    <span>DBP Console Output</span>
-                    <span class="terminal-clear" onclick="document.getElementById('terminal-output').innerHTML=''">🚫 Clear</span>
-                </div>
-                <div class="terminal-output" id="terminal-output"></div>
-            </div>
-        </div>
 
-        <footer class="status-bar">
-            <div class="status-left">
-                <span id="stat-type">TXT</span>
-                <span id="stat-size">0 B</span>
-                <span id="stat-lines">1 Ln</span>
-                <span id="stat-save" style="color: var(--success); display: none;">Saved to Cloud</span>
-            </div>
-            <div class="status-right">
-                <span id="stat-cursor">Ln 1, Col 1</span>
-                <span class="dbp-tag">DBP Notepad</span>
-            </div>
-        </footer>
-    </main>
+            <footer class="status-bar">
+                <div class="status-left">
+                    <span id="stat-type">TXT</span>
+                    <span id="stat-size">0 B</span>
+                    <span id="stat-lines">1 Ln</span>
+                    <span id="stat-save" style="color: var(--success); display: none; text-shadow: 0 0 5px var(--success);">Saved to Cloud</span>
+                </div>
+                <div class="status-right">
+                    <span id="stat-cursor">Ln 1, Col 1</span>
+                    <span class="dbp-tag">DBP Notepad</span>
+                </div>
+            </footer>
+        </main>
+    </div>
 
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, getDocs, setDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // ==========================================
-        // 1. INITIALIZE VARIABLES FIRST (Fixes the TDZ crash!)
+        // 0. THEME ENGINE (Safely Isolated)
+        // ==========================================
+        const themes = [
+            { bg: "radial-gradient(circle, #332e2e, #000000)", accent: "#00d2ff", glow: "rgba(0, 210, 255, 0.4)" }, // Your requested base
+            { bg: "radial-gradient(circle, #1a1a2e, #000000)", accent: "#a277ff", glow: "rgba(162, 119, 255, 0.4)" }, // Midnight
+            { bg: "radial-gradient(circle, #2b1111, #000000)", accent: "#ff4757", glow: "rgba(255, 71, 87, 0.4)" },   // Crimson
+            { bg: "radial-gradient(circle, #122217, #000000)", accent: "#2ed573", glow: "rgba(46, 213, 115, 0.4)" },  // Forest
+            { bg: "radial-gradient(circle, #292010, #000000)", accent: "#ffa502", glow: "rgba(255, 165, 2, 0.4)" }    // Amber
+        ];
+        
+        let currentThemeIdx = 0;
+        const savedTheme = localStorage.getItem('dbp_theme');
+        if (savedTheme !== null) {
+            const parsed = parseInt(savedTheme, 10);
+            if (!isNaN(parsed) && parsed >= 0 && parsed < themes.length) {
+                currentThemeIdx = parsed;
+            }
+        }
+
+        function applyTheme(idx) {
+            if (!themes[idx]) return;
+            const t = themes[idx];
+            document.documentElement.style.setProperty('--bg-master', t.bg);
+            document.documentElement.style.setProperty('--accent-main', t.accent);
+            document.documentElement.style.setProperty('--accent-glow', t.glow);
+            localStorage.setItem('dbp_theme', idx.toString());
+        }
+        applyTheme(currentThemeIdx); // Apply immediately on script load
+
+        // ==========================================
+        // 1. INITIALIZATION & STATE
         // ==========================================
         const loginOverlay = document.getElementById('login-overlay');
         const loginBtn = document.getElementById('login-btn');
@@ -397,7 +501,7 @@
         const loginError = document.getElementById('login-error');
 
         const state = { 
-            db: null, currentId: null, notes: [], fontSize: 14, 
+            db: null, currentId: null, notes: [], folders: [], expandedFolders: new Set(['root']), fontSize: 14, 
             isDirty: false, isWrapped: false, isSplit: false, isTerminalOpen: false 
         };
 
@@ -406,6 +510,7 @@
             editorWrapper: document.getElementById('editor-wrapper'),
             lineNumbers: document.getElementById('line-numbers'),
             filenameInput: document.getElementById('filename-input'), 
+            folderSelect: document.getElementById('folder-select'),
             unsavedIndicator: document.getElementById('unsaved-indicator'),
             notesList: document.getElementById('notes-list'), 
             splitContainer: document.getElementById('split-container'),
@@ -435,7 +540,27 @@
                 });
             },
             alert: (msg) => CustomDialog.show("Alert", msg, false),
-            confirm: (msg) => CustomDialog.show("Confirm Action", msg, true)
+            confirm: (msg) => CustomDialog.show("Confirm Action", msg, true),
+            prompt: (title, placeholder) => {
+                return new Promise((resolve) => {
+                    const overlay = document.getElementById('prompt-dialog-overlay');
+                    const input = document.getElementById('prompt-input');
+                    document.getElementById('prompt-title').innerText = title;
+                    input.placeholder = placeholder;
+                    input.value = '';
+                    overlay.style.display = 'flex';
+                    input.focus();
+
+                    const btnCancel = document.getElementById('prompt-btn-cancel');
+                    const btnConfirm = document.getElementById('prompt-btn-confirm');
+
+                    const submit = () => { overlay.style.display = 'none'; resolve(input.value.trim()); };
+                    
+                    btnConfirm.onclick = submit;
+                    btnCancel.onclick = () => { overlay.style.display = 'none'; resolve(null); };
+                    input.onkeydown = (e) => { if(e.key === 'Enter') submit(); if(e.key === 'Escape') btnCancel.click(); };
+                });
+            }
         };
 
         // ==========================================
@@ -451,36 +576,38 @@
                   messagingSenderId: "172820150595",
                   appId: "1:172820150595:web:09d62620c54388376e17f6"
                 };
-                // Safe initialization to prevent duplicates
                 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
                 state.db = getFirestore(app);
             },
             getAll: async () => {
                 try {
-                    const snapshot = await getDocs(collection(state.db, "files"));
-                    const files = [];
-                    snapshot.forEach(doc => files.push(doc.data()));
-                    return files.sort((a,b) => b.updatedAt - a.updatedAt);
+                    const filesSnap = await getDocs(collection(state.db, "files"));
+                    const foldersSnap = await getDocs(collection(state.db, "folders"));
+                    
+                    const files = []; const folders = [];
+                    filesSnap.forEach(doc => files.push(doc.data()));
+                    foldersSnap.forEach(doc => folders.push(doc.data()));
+                    
+                    return { 
+                        files: files.sort((a,b) => b.updatedAt - a.updatedAt),
+                        folders: folders.sort((a,b) => b.createdAt - a.createdAt)
+                    };
                 } catch(e) {
                     console.error("Firebase Read Error:", e);
-                    return [];
+                    return { files: [], folders: [] };
                 }
             },
-            save: async (file) => {
-                try {
-                    await setDoc(doc(state.db, "files", file.id), file);
-                    return file;
-                } catch (e) {
-                    console.error("Firebase Save Error:", e);
-                    throw e;
-                }
+            saveFile: async (file) => {
+                try { await setDoc(doc(state.db, "files", file.id), file); return file; } 
+                catch (e) { console.error(e); throw e; }
             },
-            delete: async (id) => {
-                try {
-                    await deleteDoc(doc(state.db, "files", id));
-                } catch (e) {
-                    console.error("Firebase Delete Error:", e);
-                }
+            deleteFile: async (id) => {
+                try { await deleteDoc(doc(state.db, "files", id)); } 
+                catch (e) { console.error(e); }
+            },
+            saveFolder: async (folder) => {
+                try { await setDoc(doc(state.db, "folders", folder.id), folder); return folder; }
+                catch (e) { console.error(e); throw e; }
             }
         };
 
@@ -496,7 +623,7 @@
                     await createNewFile(); 
                 }
             } catch (error) {
-                console.error("Firebase Load Error:", error);
+                console.error("Boot Error:", error);
                 await createNewFile(); 
             }
         }
@@ -519,39 +646,118 @@
         }
 
         async function fetchDatabase() {
-            state.notes = await DB.getAll(); 
-            renderSidebar();
+            const data = await DB.getAll(); 
+            state.notes = data.files;
+            state.folders = data.folders;
+            updateFolderSelects();
+            renderSidebar(document.getElementById('search-input').value);
         }
 
-        function renderSidebar(filter = '') {
-            els.notesList.innerHTML = '';
-            // Added safe check (n.filename || '') to prevent missing filename crashes
-            state.notes.filter(n => (n.filename || '').toLowerCase().includes(filter.toLowerCase())).forEach(f => {
-                const fn = f.filename || 'Untitled';
-                const icon = getIconData(fn); 
-                const isHtml = fn.toLowerCase().endsWith('.html') || fn.toLowerCase().endsWith('.htm');
-                const textClass = isHtml ? 'text-html' : '';
+        function updateFolderSelects() {
+            const currentVal = els.folderSelect.value;
+            els.folderSelect.innerHTML = '<option value="root">/ Root</option>';
+            state.folders.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f.id; opt.innerText = `📁 ${f.name}`;
+                els.folderSelect.appendChild(opt);
+            });
+            if(Array.from(els.folderSelect.options).some(o => o.value === currentVal)) {
+                els.folderSelect.value = currentVal;
+            }
+        }
 
-                const div = document.createElement('div');
-                div.className = `note-card ${f.id === state.currentId ? 'active' : ''}`;
-                
-                div.innerHTML = `
+        function createNoteCardHTML(f) {
+            const fn = f.filename || 'Untitled';
+            const icon = getIconData(fn); 
+            const isHtml = fn.toLowerCase().endsWith('.html') || fn.toLowerCase().endsWith('.htm');
+            const textClass = isHtml ? 'text-html' : '';
+            return `
+                <div class="note-card ${f.id === state.currentId ? 'active' : ''}" data-id="${f.id}">
                     <div class="note-icon ${icon.c}">${icon.i}</div>
                     <div class="note-info">
                         <h3 class="${textClass}">${fn}</h3>
                         <p>${new Date(f.updatedAt).toLocaleDateString()}</p>
-                    </div>`;
-                
-                div.onclick = async () => { 
+                    </div>
+                </div>`;
+        }
+
+        function attachCardEvents() {
+            document.querySelectorAll('.note-card').forEach(card => {
+                card.onclick = async (e) => {
+                    e.stopPropagation();
                     if(!state.isDirty || await CustomDialog.confirm("Discard unsaved changes?")) {
-                        await openFile(f.id); 
+                        await openFile(card.dataset.id); 
                         if (window.innerWidth <= 768) {
                             document.getElementById('sidebar-container').classList.add('hidden');
                         }
                     }
-                }; 
-                els.notesList.appendChild(div);
+                };
             });
+        }
+
+        window.toggleFolder = (folderId) => {
+            const group = document.getElementById(`folder-group-${folderId}`);
+            if(group) {
+                group.classList.toggle('collapsed');
+                if(group.classList.contains('collapsed')) state.expandedFolders.delete(folderId);
+                else state.expandedFolders.add(folderId);
+            }
+        };
+
+        function renderSidebar(filter = '') {
+            els.notesList.innerHTML = '';
+            const searchLower = filter.toLowerCase();
+            
+            const visibleFiles = state.notes.filter(n => (n.filename || '').toLowerCase().includes(searchLower));
+            const filesByFolder = { 'root': [] };
+            state.folders.forEach(f => filesByFolder[f.id] = []);
+            
+            visibleFiles.forEach(f => {
+                const fId = f.folderId && filesByFolder[f.folderId] ? f.folderId : 'root';
+                filesByFolder[fId].push(f);
+            });
+
+            state.folders.forEach(folder => {
+                if(filter && filesByFolder[folder.id].length === 0) return;
+
+                const isCollapsed = state.expandedFolders.has(folder.id) ? '' : 'collapsed';
+                
+                const groupDiv = document.createElement('div');
+                groupDiv.className = `folder-group ${isCollapsed}`;
+                groupDiv.id = `folder-group-${folder.id}`;
+                
+                let html = `<div class="folder-header" onclick="toggleFolder('${folder.id}')">
+                                <span class="folder-icon">▼</span> 📁 ${folder.name}
+                            </div>
+                            <div class="folder-contents">`;
+                
+                filesByFolder[folder.id].forEach(f => html += createNoteCardHTML(f));
+                if(filesByFolder[folder.id].length === 0) html += `<div style="font-size:0.75rem; color:#666; padding: 5px;">Empty folder</div>`;
+                
+                html += `</div>`;
+                groupDiv.innerHTML = html;
+                els.notesList.appendChild(groupDiv);
+            });
+
+            if(filesByFolder['root'].length > 0) {
+                const rootDiv = document.createElement('div');
+                rootDiv.style.marginTop = '10px';
+                rootDiv.innerHTML = `<div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px; padding-left: 5px;">/ ROOT FILES</div>`;
+                filesByFolder['root'].forEach(f => rootDiv.innerHTML += createNoteCardHTML(f));
+                els.notesList.appendChild(rootDiv);
+            }
+
+            attachCardEvents();
+        }
+
+        async function createNewFolder() {
+            const name = await CustomDialog.prompt("New Folder Name", "e.g., Robot Scripts");
+            if(name) {
+                const newFolder = { id: 'f_'+Date.now(), name: name, createdAt: Date.now() };
+                await DB.saveFolder(newFolder);
+                state.expandedFolders.add(newFolder.id);
+                await fetchDatabase();
+            }
         }
 
         function autoDetectExtension(content) {
@@ -575,11 +781,14 @@
             
             const file = { 
                 id: state.currentId || Date.now().toString(), 
-                filename: fn, content: els.editor.value, updatedAt: Date.now() 
+                filename: fn, 
+                content: els.editor.value, 
+                folderId: els.folderSelect.value, 
+                updatedAt: Date.now() 
             };
             
             try {
-                await DB.save(file); 
+                await DB.saveFile(file); 
                 state.currentId = file.id; 
                 setDirty(false); 
                 
@@ -589,9 +798,7 @@
                 
                 await fetchDatabase(); 
                 updatePreview();
-            } catch(err) {
-                console.error(err);
-            }
+            } catch(err) { console.error(err); }
         }
 
         async function openFile(id) { 
@@ -599,8 +806,9 @@
             if (!file) return; 
             
             state.currentId = file.id; 
-            els.editor.value = file.content; 
+            els.editor.value = file.content || ''; 
             els.filenameInput.value = file.filename; 
+            els.folderSelect.value = file.folderId && state.folders.find(f=>f.id===file.folderId) ? file.folderId : 'root';
             
             setDirty(false); 
             updateMetrics(); 
@@ -643,8 +851,7 @@
             const e = els.editor.selectionEnd; 
             els.editor.value = els.editor.value.substring(0, s) + text + els.editor.value.substring(e);
             els.editor.selectionStart = els.editor.selectionEnd = s + text.length + offset; 
-            setDirty(true); 
-            updateMetrics();
+            setDirty(true); updateMetrics();
         }
 
         els.editor.addEventListener('keydown', function(e) {
@@ -714,7 +921,6 @@
             }
         }
 
-        // Changed to strictly sync window.confirm to bypass Mobile Safari/Chrome security blocks for file inputs
         document.getElementById('btn-import').onclick = () => {
             if(state.isDirty && !window.confirm("You have unsaved changes. Discard them to open a new file?")) return;
             els.fileImport.click();
@@ -725,10 +931,11 @@
             if (!file) return;
             const reader = new FileReader();
             reader.onload = async (ev) => {
-                const newFile = { id: Date.now().toString(), filename: file.name, content: ev.target.result, updatedAt: Date.now() };
-                await DB.save(newFile);
+                const newFile = { id: Date.now().toString(), filename: file.name, content: ev.target.result, folderId: els.folderSelect.value, updatedAt: Date.now() };
+                await DB.saveFile(newFile);
+                await fetchDatabase();
                 await openFile(newFile.id);
-                CustomDialog.alert(`File "${file.name}" opened successfully!`);
+                CustomDialog.alert(`File "${file.name}" imported successfully!`);
             };
             reader.readAsText(file);
             e.target.value = '';
@@ -750,9 +957,9 @@
         };
         
         document.getElementById('btn-backup').onclick = async () => {
-            const all = await DB.getAll(); 
-            const blob = new Blob([JSON.stringify(all)], { type: 'application/json' });
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `DBP_Firebase_Backup_${new Date().getTime()}.dbp`; a.click();
+            const data = await DB.getAll(); 
+            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `DBP_Workspace_Backup_${new Date().getTime()}.dbp`; a.click();
         };
 
         document.getElementById('btn-restore').onclick = () => document.getElementById('file-restore').click();
@@ -763,18 +970,21 @@
             reader.onload = async (ev) => {
                 try {
                     const data = JSON.parse(ev.target.result); 
-                    if(!(await CustomDialog.confirm("This will merge with your current Firebase files. Proceed?"))) return;
-                    for(let f of data) await DB.save(f); 
+                    if(!(await CustomDialog.confirm("Merge this backup with your current cloud database?"))) return;
+                    
+                    if(data.folders) for(let f of data.folders) await DB.saveFolder(f);
+                    if(data.files) for(let f of data.files) await DB.saveFile(f); 
+                    
                     await fetchDatabase(); 
-                    CustomDialog.alert("Workspace Restored to Cloud!");
-                } catch(err) { CustomDialog.alert("Invalid .dbp backup file."); }
+                    CustomDialog.alert("Workspace Restored!");
+                } catch(err) { CustomDialog.alert("Invalid backup file."); }
             }; reader.readAsText(file);
         };
 
         document.getElementById('btn-delete').onclick = async () => { 
             if(!state.currentId) return CustomDialog.alert("No saved file is currently selected.");
-            if(await CustomDialog.confirm(`Permanently delete "${els.filenameInput.value}" from the cloud?`)) { 
-                await DB.delete(state.currentId); 
+            if(await CustomDialog.confirm(`Permanently delete "${els.filenameInput.value}"?`)) { 
+                await DB.deleteFile(state.currentId); 
                 await CustomDialog.alert(`File deleted.`);
                 await fetchDatabase();
                 await createNewFile(); 
@@ -832,15 +1042,22 @@
             document.getElementById('btn-console').classList.toggle('active', state.isTerminalOpen); 
         };
 
-        function applyFontSize() { document.documentElement.style.setProperty('--editor-font-size', `${state.fontSize}px`); }
+        function applyFontSize() { document.documentElement.style.setProperty('--editor-font-size', `${state.fontSize}px`); updateMetrics(); }
         document.getElementById('btn-zoom-in').onclick = () => { if (state.fontSize < 40) { state.fontSize += 2; applyFontSize(); }};
         document.getElementById('btn-zoom-out').onclick = () => { if (state.fontSize > 8) { state.fontSize -= 2; applyFontSize(); }};
         
         function togglePalette() { els.cmdPalette.style.display = els.cmdPalette.style.display === 'flex' ? 'none' : 'flex'; if(els.cmdPalette.style.display==='flex') { els.cmdInput.value = ''; els.cmdInput.focus(); updatePalette(); } else els.editor.focus(); }
+        
         function updatePalette() {
             const q = els.cmdInput.value.toLowerCase(); els.cmdResults.innerHTML = '';
             if (q.startsWith('>')) { 
-                const cmds = [ { n: 'Split Screen', a: () => document.getElementById('btn-split').click() }, { n: 'Toggle Terminal', a: () => document.getElementById('btn-console').click() }, { n: 'Export Workspace', a: () => document.getElementById('btn-backup').click() } ];
+                const cmds = [ 
+                    { n: 'Split Screen', a: () => document.getElementById('btn-split').click() }, 
+                    { n: 'Toggle Terminal', a: () => document.getElementById('btn-console').click() }, 
+                    { n: 'Export Workspace', a: () => document.getElementById('btn-backup').click() }, 
+                    { n: 'New Folder', a: createNewFolder },
+                    { n: 'Cycle Dark Theme', a: () => document.getElementById('btn-theme').click() }
+                ];
                 cmds.filter(c => c.n.toLowerCase().includes(q.substring(1).trim())).forEach(c => { const d = document.createElement('div'); d.className = 'cmd-item'; d.innerHTML = `<span>⚙️ ${c.n}</span>`; d.onclick = () => { c.a(); togglePalette(); }; els.cmdResults.appendChild(d); });
             } else { 
                 state.notes.filter(n => (n.filename || '').toLowerCase().includes(q)).forEach(f => { const d = document.createElement('div'); d.className = 'cmd-item'; d.innerHTML = `<span>📄 ${f.filename || 'Untitled'}</span>`; d.onclick = async () => { if(!state.isDirty || await CustomDialog.confirm("Discard?")) openFile(f.id); togglePalette(); }; els.cmdResults.appendChild(d); });
@@ -849,11 +1066,22 @@
         els.cmdInput.addEventListener('input', updatePalette);
 
         function setupEvents() {
+            // Theme button click event attached here safely
+            document.getElementById('btn-theme').onclick = () => {
+                currentThemeIdx = (currentThemeIdx + 1) % themes.length;
+                applyTheme(currentThemeIdx);
+            };
+
             els.editor.addEventListener('input', () => { setDirty(true); updateMetrics(); });
             els.editor.addEventListener('scroll', () => els.lineNumbers.scrollTop = els.editor.scrollTop);
             els.editor.addEventListener('keyup', updateMetrics); els.editor.addEventListener('click', updateMetrics);
             els.filenameInput.addEventListener('input', () => setDirty(true));
-            document.getElementById('btn-new').onclick = createNewFile; document.getElementById('btn-save').onclick = saveFile;
+            els.folderSelect.addEventListener('change', () => setDirty(true)); 
+            
+            document.getElementById('btn-new').onclick = createNewFile; 
+            document.getElementById('btn-new-folder').onclick = createNewFolder; 
+            document.getElementById('btn-save').onclick = saveFile;
+            
             document.getElementById('btn-wrap').onclick = () => { state.isWrapped = !state.isWrapped; els.editor.style.whiteSpace = state.isWrapped ? 'pre-wrap' : 'pre'; document.getElementById('btn-wrap').classList.toggle('active'); };
             document.getElementById('btn-toggle-sidebar').onclick = () => document.getElementById('sidebar-container').classList.toggle('hidden');
             document.getElementById('btn-palette').onclick = togglePalette;
@@ -870,6 +1098,7 @@
                 if ((e.ctrlKey || e.metaKey) && e.key === 'p') { e.preventDefault(); togglePalette(); } 
                 if (e.key === 'Escape') { 
                     if(document.getElementById('custom-dialog-overlay').style.display === 'flex') document.getElementById('dialog-btn-cancel').click(); 
+                    else if(document.getElementById('prompt-dialog-overlay').style.display === 'flex') document.getElementById('prompt-btn-cancel').click(); 
                     else if (els.cmdPalette.style.display === 'flex') togglePalette(); 
                 }
             });
@@ -877,7 +1106,7 @@
         }
 
         // ==========================================
-        // 3. BOOT SEQUENCE (Runs last so variables exist)
+        // 3. BOOT SEQUENCE
         // ==========================================
         const MASTER_PASS = "DBP_236562_DBP_9827700975_DBP";
 
@@ -902,4 +1131,4 @@
         });
     </script>
 </body>
-            </html>
+</html>
