@@ -3,37 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DBP | Notepad Workspace</title>
+    <title>DBP | Secure Workspace</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <style>
         /* =========================================
-           ROOT VARIABLES & GLASSMORPHISM BASE
+           ROOT VARIABLES & CORE SETTINGS
            ========================================= */
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
+
         :root {
-            /* Base Requested Radial Gradient */
-            --bg-master: radial-gradient(circle, #332e2e, #000000);
-            
-            /* Glassmorphism Variables */
-            --glass-bg: rgba(20, 20, 20, 0.45);
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-            --glass-blur: blur(12px);
-            
+            /* Restored & Enhanced Radial Gradients */
+            --bg-master: radial-gradient(circle at center, #3a3232 0%, #050505 100%);
             --accent-main: #00d2ff;
-            --accent-glow: rgba(0, 210, 255, 0.4);
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --danger: #ff4757;
-            --success: #2ed573;
-            --warning: #ffa502;
+            --accent-glow: rgba(0, 210, 255, 0.3);
             
+            /* Enhanced Glassmorphism */
+            --glass-bg: rgba(20, 20, 25, 0.45); 
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.15); 
+            --glass-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            --glass-blur: blur(24px);
+            
+            /* Typography & Colors */
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #64748b;
+            --bg-darker: rgba(0, 0, 0, 0.3);
+            --bg-lighter: rgba(255, 255, 255, 0.06);
+            
+            /* Status Colors */
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            
+            /* Layout */
             --font-mono: 'Fira Code', 'JetBrains Mono', Consolas, monospace;
-            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            --sidebar-width: 280px;
+            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+            --sidebar-width: 300px;
             --editor-font-size: 14px;
             --radius-lg: 16px;
-            --radius-md: 10px;
-            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-sm: 4px;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -44,284 +54,392 @@
             font-family: var(--font-sans);
             height: 100vh; 
             display: flex; 
+            justify-content: center; 
+            align-items: center;     
+            padding: 24px;           
+            gap: 20px;               
             overflow: hidden; 
-            transition: background 0.5s ease;
+            transition: background 0.8s ease;
         }
 
-        /* Glass Utility Class */
+        /* Scrollbars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; } 
+        ::-webkit-scrollbar-track { background: transparent; } 
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+
         .glass-panel {
             background: var(--glass-bg);
             backdrop-filter: var(--glass-blur);
             -webkit-backdrop-filter: var(--glass-blur);
             border: 1px solid var(--glass-border);
+            border-top: 1px solid var(--glass-highlight);
+            border-left: 1px solid var(--glass-highlight);
             box-shadow: var(--glass-shadow);
+            border-radius: var(--radius-lg);
         }
 
         /* =========================================
            LOGIN OVERLAY
            ========================================= */
         #login-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-master); z-index: 9999; display: flex;
-            flex-direction: column; align-items: center; justify-content: center;
+            position: fixed; inset: 0; background: var(--bg-master);
+            z-index: 9999; display: flex; align-items: center; justify-content: center;
         }
+        
         .login-box {
-            padding: 40px; border-radius: var(--radius-lg);
-            border: 1px solid var(--accent-main); box-shadow: 0 0 40px var(--accent-glow);
-            text-align: center; width: 90%; max-width: 400px;
+            padding: 48px 40px; 
+            text-align: center; width: 90%; max-width: 420px;
+            background: linear-gradient(145deg, rgba(30,30,38,0.6), rgba(15,15,20,0.8));
         }
-        .login-box h1 { margin-bottom: 25px; font-size: 1.6rem; letter-spacing: 2px; }
-        .login-box h1 span { color: var(--accent-main); text-shadow: 0 0 10px var(--accent-glow); transition: 0.3s; }
+        
+        .login-box h1 { margin-bottom: 32px; font-size: 1.75rem; font-weight: 700; letter-spacing: 0.5px; }
+        .login-box h1 span { color: var(--accent-main); text-shadow: 0 0 15px var(--accent-glow); }
+        
         .login-input {
-            width: 100%; padding: 14px; margin-bottom: 20px; border-radius: var(--radius-md);
-            background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
-            color: #fff; outline: none; text-align: center; font-family: var(--font-mono);
-            transition: all 0.3s ease;
+            width: 100%; padding: 14px 16px; margin-bottom: 24px; 
+            border-radius: var(--radius-md); background: rgba(0,0,0,0.4); 
+            border: 1px solid var(--glass-border); color: var(--text-primary); 
+            outline: none; text-align: center; font-family: var(--font-mono);
+            font-size: 1rem; letter-spacing: 3px; transition: all 0.3s;
         }
-        .login-input:focus { border-color: var(--accent-main); box-shadow: 0 0 15px rgba(0, 210, 255, 0.2); }
+        
+        .login-input:focus { border-color: var(--accent-main); box-shadow: 0 0 15px var(--accent-glow); }
+        
         .login-btn {
             width: 100%; padding: 14px; border: none; border-radius: var(--radius-md);
-            background: var(--accent-main); color: #000; font-weight: bold; cursor: pointer;
-            transition: 0.3s; font-size: 1rem;
+            background: var(--accent-main); color: #000; font-weight: 600; cursor: pointer;
+            transition: all 0.2s ease; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;
         }
-        .login-btn:hover { box-shadow: 0 0 20px var(--accent-glow); transform: translateY(-2px); }
-        #login-error { color: var(--danger); margin-top: 15px; font-size: 0.9rem; display: none; }
+        
+        .login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px var(--accent-glow); filter: brightness(1.1); }
+        #login-error { color: var(--danger); margin-top: 16px; font-size: 0.9rem; display: none; font-weight: 500; }
 
         /* =========================================
-           SIDEBAR & FILE EXPLORER
+           SIDEBAR
            ========================================= */
         #sidebar-container { 
-            display: flex; height: 100%; z-index: 20; padding: 10px;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            display: flex; height: 100%; z-index: 20;
+            transition: margin-left 0.5s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s ease; 
         }
-        #sidebar-container.hidden { transform: translateX(-100%); position: absolute; }
+        
+        #sidebar-container.hidden { 
+            margin-left: calc(-1 * var(--sidebar-width) - 60px);
+            opacity: 0;
+            pointer-events: none;
+        }
 
         #sidebar { 
-            width: var(--sidebar-width); min-width: 220px; max-width: 500px; 
-            border-radius: var(--radius-lg);
-            display: flex; flex-direction: column; overflow: hidden;
-            margin-right: 5px;
+            width: var(--sidebar-width); 
+            min-width: 260px; max-width: 600px;
+            display: flex; flex-direction: column; height: 100%;
         }
         
         .resizer { 
-            width: 6px; background: transparent; cursor: col-resize; z-index: 100; transition: 0.2s; 
-            border-radius: 10px; margin-left: 5px;
+            width: 12px; cursor: col-resize; z-index: 100; position: relative;
+            margin-left: 8px; flex-shrink: 0; transition: opacity 0.2s;
         }
-        .resizer:hover, .resizer.active { background: var(--accent-glow); }
+        .resizer::after {
+            content: ''; position: absolute; left: 4px; top: 50%;
+            transform: translateY(-50%); height: 40px; width: 4px;
+            background: rgba(255,255,255,0.1); border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        .resizer:hover::after, .resizer.active::after { 
+            background: var(--accent-main); 
+            box-shadow: 0 0 12px var(--accent-glow); 
+            height: 60px;
+        }
 
-        .sidebar-header { padding: 20px 15px 15px; border-bottom: 1px solid var(--glass-border); }
-        .brand { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
-        .brand h1 { font-size: 1.1rem; font-weight: 800; letter-spacing: 1px; color: #fff; }
-        .brand span { color: var(--accent-main); transition: 0.3s; }
+        .sidebar-header { padding: 24px 20px 20px; border-bottom: 1px solid var(--glass-border); background: var(--bg-darker); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
         
+        .brand { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .brand h1 { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); }
+        .brand span { color: var(--accent-main); }
+        
+        .workspace-stats {
+            font-size: 0.75rem; color: var(--text-secondary); font-family: var(--font-mono);
+            margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: var(--radius-sm);
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+
         .search-box { 
-            width: 100%; padding: 10px 12px; background: rgba(0,0,0,0.3); 
+            width: 100%; padding: 10px 14px; background: rgba(0,0,0,0.4); 
             border: 1px solid var(--glass-border); border-radius: var(--radius-md); 
             color: var(--text-primary); font-size: 0.85rem; outline: none; transition: 0.2s; 
         }
-        .search-box:focus { border-color: var(--accent-main); }
+        .search-box:focus { border-color: var(--accent-main); background: rgba(0,0,0,0.6); }
 
-        .sidebar-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+        .sidebar-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
         .sidebar-btn { 
-            flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); 
-            color: var(--text-primary); padding: 8px; border-radius: var(--radius-sm); cursor: pointer; 
-            font-size: 0.8rem; transition: 0.2s; min-width: 45%;
+            background: var(--bg-lighter); border: 1px solid var(--glass-border); 
+            color: var(--text-secondary); padding: 8px; border-radius: var(--radius-sm); 
+            cursor: pointer; font-size: 0.8rem; font-weight: 500; transition: 0.2s;
         }
-        .sidebar-btn:hover { background: rgba(255,255,255,0.1); }
-        .sidebar-btn.primary { color: var(--accent-main); border-color: rgba(0,210,255,0.3); background: rgba(0,210,255,0.05); }
-        .sidebar-btn.primary:hover { background: var(--accent-main); color: #000; }
+        .sidebar-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+        .sidebar-btn.primary { color: var(--accent-main); border-color: rgba(0,210,255,0.2); background: rgba(0,210,255,0.05); }
+        .sidebar-btn.primary:hover { background: var(--accent-main); color: #000; box-shadow: 0 0 15px var(--accent-glow); }
 
-        #notes-list { flex-grow: 1; overflow-y: auto; padding: 10px; }
+        /* =========================================
+           FILE EXPLORER (SMOOTH GLIDING FOLDER HOVER)
+           ========================================= */
+        #notes-list { flex-grow: 1; overflow-y: auto; padding: 12px; }
         
-        /* FOLDER STYLES */
         .folder-group { margin-bottom: 8px; }
+        
         .folder-header {
-            display: flex; align-items: center; gap: 8px; padding: 8px 10px;
-            cursor: pointer; border-radius: var(--radius-sm); color: var(--text-primary);
-            font-size: 0.9rem; font-weight: bold; transition: 0.2s; background: rgba(0,0,0,0.2);
-            border: 1px solid transparent;
+            display: flex; align-items: center; padding: 8px 10px;
+            cursor: pointer; border-radius: var(--radius-sm); color: var(--text-secondary);
+            font-size: 0.85rem; font-weight: 600; 
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            border: 1px solid transparent; 
         }
-        .folder-header:hover { background: rgba(0,0,0,0.4); border-color: var(--glass-border); }
-        .folder-icon { color: var(--warning); font-size: 1.1rem; transition: transform 0.2s; }
+        
+        .folder-header:hover { 
+            background: var(--bg-lighter); 
+            color: var(--text-primary); 
+            transform: translateX(4px); /* Satisfying nudge to the right */
+        }
+        
+        .folder-icon { font-size: 0.8rem; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); flex-shrink: 0; margin-right: 8px; }
+        .folder-name { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 10px; }
+
+        /* The magic container that handles the vertical slot animation */
+        .folder-right { 
+            position: relative; width: 75px; height: 24px; 
+            display: flex; align-items: center; justify-content: flex-end;
+            flex-shrink: 0; overflow: hidden;
+        }
+        
+        .folder-meta { 
+            position: absolute; right: 4px;
+            font-size: 0.7rem; color: var(--text-muted); font-weight: 400; 
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            transform: translateY(0); opacity: 1; pointer-events: none;
+        }
+
+        .folder-actions { 
+            position: absolute; right: 0;
+            display: flex; gap: 4px; 
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            transform: translateY(20px); opacity: 0; pointer-events: none;
+        }
+        
+        /* The Glide Trigger */
+        .folder-header:hover .folder-meta { transform: translateY(-20px); opacity: 0; }
+        .folder-header:hover .folder-actions { transform: translateY(0); opacity: 1; pointer-events: auto; }
+        
         .folder-group.collapsed .folder-contents { display: none; }
         .folder-group.collapsed .folder-icon { transform: rotate(-90deg); }
-        .folder-contents { padding-left: 12px; margin-top: 4px; border-left: 1px dashed var(--glass-border); margin-left: 15px; }
+
+        .folder-action-btn { 
+            background: none; border: none; color: var(--text-muted); cursor: pointer; 
+            padding: 2px; border-radius: var(--radius-sm); font-size: 0.95rem; 
+            transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .folder-action-btn:hover { color: var(--accent-main); background: rgba(255,255,255,0.1); transform: scale(1.15); }
+        .folder-action-btn.del:hover { color: var(--danger); background: rgba(239, 68, 68, 0.1); }
+
+        .folder-contents { padding-left: 14px; margin-top: 4px; border-left: 1px solid var(--glass-border); margin-left: 14px; }
 
         .note-card { 
             border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 4px; cursor: pointer; 
-            display: flex; gap: 10px; align-items: center; transition: all 0.2s; border: 1px solid transparent; 
+            display: flex; gap: 12px; align-items: center; transition: all 0.2s ease; border: 1px solid transparent; 
         }
-        .note-card:hover { background: rgba(255,255,255,0.08); }
+        .note-card:hover { background: var(--bg-lighter); transform: translateX(2px); }
         .note-card.active { 
-            background: rgba(0, 210, 255, 0.1); border-color: rgba(0, 210, 255, 0.3); 
-            border-right: 3px solid var(--accent-main); 
+            background: linear-gradient(90deg, rgba(0, 210, 255, 0.1) 0%, transparent 100%); 
+            border-left: 3px solid var(--accent-main); 
         }
-        .note-icon { font-size: 1.2rem; }
+        
+        .note-icon { font-size: 1.1rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
         .note-info { overflow: hidden; flex-grow: 1; }
-        .note-info h3 { font-size: 0.85rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #e2e8f0; }
-        .note-info p { font-size: 0.65rem; color: var(--text-secondary); margin-top: 2px; }
-
+        .note-info-top { display: flex; justify-content: space-between; align-items: center; }
+        .note-info h3 { font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .note-card.active .note-info h3 { color: var(--text-primary); font-weight: 600; }
+        .note-size { font-size: 0.65rem; color: var(--text-muted); font-family: var(--font-mono); }
+        
         /* File Colors */
-        .ext-html { color: #2ed573; text-shadow: 0 0 8px rgba(46, 213, 115, 0.6); }
-        .text-html { color: #2ed573 !important; font-weight: bold !important; text-shadow: 0 0 5px rgba(46, 213, 115, 0.3); }
-        .ext-css { color: #3498db; } .ext-js { color: #f1c40f; } .ext-json { color: var(--accent-main); transition: 0.3s;} 
-        .ext-md { color: #9b59b6; } .ext-ino { color: #00979D; } .ext-py { color: #e67e22; }
+        .ext-html { color: #e34c26; } .ext-css { color: #264de4; } .ext-js { color: #f7df1e; } 
+        .ext-json { color: #859900; } .ext-md { color: #a78bfa; } .ext-ino { color: #00979d; } .ext-py { color: #3776ab; }
 
         /* =========================================
            MAIN WORKSPACE & TOOLBAR
            ========================================= */
-        #workspace-container {
-            flex-grow: 1; display: flex; flex-direction: column; padding: 10px 10px 10px 0; min-width: 0;
-        }
-        #workspace { 
-            flex-grow: 1; display: flex; flex-direction: column; border-radius: var(--radius-lg); 
-            overflow: hidden; 
-        }
+        #workspace-container { flex-grow: 1; display: flex; height: 100%; min-width: 0; }
+        #workspace { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; height: 100%; }
 
-        .tabs { display: flex; border-bottom: 1px solid var(--glass-border); padding-top: 8px; padding-left: 10px; background: rgba(0,0,0,0.2); }
+        .tabs { display: flex; border-bottom: 1px solid var(--glass-border); padding: 12px 16px 0; background: var(--bg-darker); border-radius: var(--radius-lg) var(--radius-lg) 0 0;}
         .tab { 
-            padding: 10px 20px; color: var(--text-secondary); cursor: pointer; border-radius: var(--radius-md) var(--radius-md) 0 0; 
-            font-size: 0.85rem; user-select: none; margin-right: 5px; border-bottom: 2px solid transparent; transition: 0.2s;
+            padding: 10px 24px; color: var(--text-muted); cursor: pointer; border-radius: var(--radius-md) var(--radius-md) 0 0; 
+            font-size: 0.85rem; font-weight: 500; margin-right: 6px; border-bottom: 2px solid transparent; transition: 0.2s;
         }
-        .tab:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
-        .tab.active { color: var(--accent-main); background: rgba(0, 210, 255, 0.08); border-bottom-color: var(--accent-main); }
-        .toggle-sidebar { margin-left: auto; background: transparent; color: var(--text-secondary); border: none; cursor: pointer; padding: 0 15px; font-size: 1.2rem; transition: 0.2s; }
-        .toggle-sidebar:hover { color: #fff; text-shadow: 0 0 10px #fff; }
+        .tab:hover { color: var(--text-secondary); background: var(--bg-lighter); }
+        .tab.active { color: var(--accent-main); background: rgba(0, 210, 255, 0.05); border-bottom-color: var(--accent-main); }
+        
+        .toggle-sidebar { margin-left: auto; background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 0 12px; font-size: 1.1rem; transition: 0.2s; }
+        .toggle-sidebar:hover { color: var(--text-primary); transform: scale(1.1); }
 
-        .toolbar { 
-            padding: 10px 15px; border-bottom: 1px solid var(--glass-border); 
-            display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.2);
-        }
+        .toolbar { padding: 12px 16px; border-bottom: 1px solid var(--glass-border); display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: rgba(0,0,0,0.15); }
+        
+        .filename-wrapper { position: relative; display: flex; align-items: center; }
         .filename-input { 
             background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); color: var(--accent-main); 
-            padding: 8px 12px; border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 0.9rem; width: 180px; outline: none; font-weight: bold; transition: 0.2s;
+            padding: 8px 14px; border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 0.85rem; 
+            width: 200px; outline: none; font-weight: 600; transition: 0.2s;
         }
-        .filename-input:focus { border-color: var(--accent-main); box-shadow: 0 0 10px rgba(0, 210, 255, 0.2); }
+        .filename-input:focus { border-color: var(--accent-main); background: rgba(0,0,0,0.6); box-shadow: 0 0 0 2px rgba(0, 210, 255, 0.1); }
         
         .folder-select {
-            background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); color: var(--text-primary);
-            padding: 8px 12px; border-radius: var(--radius-md); font-family: var(--font-sans); font-size: 0.85rem; outline: none; cursor: pointer;
-            transition: 0.2s; max-width: 140px;
+            appearance: none; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); color: var(--text-secondary);
+            padding: 8px 32px 8px 14px; border-radius: var(--radius-md); font-size: 0.85rem; font-weight: 500;
+            outline: none; cursor: pointer; max-width: 160px; transition: 0.2s;
         }
+        .folder-select:hover { border-color: rgba(255,255,255,0.2); color: var(--text-primary); }
         .folder-select:focus { border-color: var(--accent-main); }
-        .folder-select option { background: #0f172a; color: #fff; }
+        .folder-select option { background: #1a1a24; color: #fff; padding: 10px; }
 
-        .unsaved-dot { height: 8px; width: 8px; background: var(--danger); border-radius: 50%; margin-left: 8px; display: none; box-shadow: 0 0 8px var(--danger); }
-        .divider { width: 1px; height: 20px; background: var(--glass-border); margin: 0 5px; }
+        .unsaved-dot { height: 8px; width: 8px; background: var(--warning); border-radius: 50%; margin-left: -20px; display: none; box-shadow: 0 0 8px var(--warning); }
+        .divider { width: 1px; height: 24px; background: var(--glass-border); margin: 0 4px; }
         
         .icon-btn { 
-            background: rgba(255,255,255,0.03); color: var(--text-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); 
-            height: 36px; min-width: 36px; display: flex; align-items: center; justify-content: center; 
+            background: transparent; color: var(--text-muted); border: 1px solid transparent; border-radius: var(--radius-sm); 
+            height: 34px; width: 34px; display: flex; align-items: center; justify-content: center; 
             cursor: pointer; font-size: 1.1rem; transition: all 0.2s ease; position: relative; 
         }
-        .icon-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .icon-btn.danger:hover { background: rgba(255, 71, 87, 0.15); color: var(--danger); border-color: rgba(255, 71, 87, 0.4); }
-        .icon-btn.primary { color: var(--accent-main); border-color: rgba(0, 210, 255, 0.3); }
-        .icon-btn.primary:hover { background: rgba(0, 210, 255, 0.15); box-shadow: 0 0 15px rgba(0, 210, 255, 0.2); }
-        .icon-btn.active { background: rgba(0, 210, 255, 0.2); color: var(--accent-main); border-color: var(--accent-main); }
+        .icon-btn:hover { background: var(--bg-lighter); color: var(--text-primary); }
+        .icon-btn.danger:hover { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+        .icon-btn.primary { color: var(--accent-main); background: rgba(0, 210, 255, 0.1); }
+        .icon-btn.primary:hover { background: rgba(0, 210, 255, 0.2); box-shadow: 0 0 15px rgba(0, 210, 255, 0.2); }
+        .icon-btn.active { background: rgba(0, 210, 255, 0.15); color: var(--accent-main); }
         
         .icon-btn::after { 
-            content: attr(data-tooltip); position: absolute; bottom: -35px; left: 50%; 
-            transform: translateX(-50%) scale(0.9); background: var(--glass-bg); backdrop-filter: var(--glass-blur); color: #fff; font-size: 0.75rem; 
+            content: attr(data-tooltip); position: absolute; bottom: -36px; left: 50%; 
+            transform: translateX(-50%) translateY(4px); background: #000; color: #f8fafc; font-size: 0.75rem; font-weight: 500;
             padding: 6px 10px; border-radius: var(--radius-sm); white-space: nowrap; opacity: 0; pointer-events: none; 
-            transition: 0.2s; z-index: 100; border: 1px solid var(--glass-border); box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(255,255,255,0.1); z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
-        .icon-btn:hover::after { opacity: 1; transform: translateX(-50%) scale(1); }
+        .icon-btn:hover::after { opacity: 1; transform: translateX(-50%) translateY(0); }
 
         /* =========================================
            SPLIT VIEW & EDITOR
            ========================================= */
-        .workspace-core { flex-grow: 1; display: flex; overflow: hidden; flex-direction: column; background: rgba(0,0,0,0.2); }
+        .workspace-core { flex-grow: 1; display: flex; flex-direction: column; background: rgba(0,0,0,0.2); overflow: hidden; }
         .split-container { flex-grow: 1; display: flex; overflow: hidden; }
         
-        .editor-wrapper, .preview-wrapper { display: flex; flex-grow: 1; position: relative; width: 100%; }
+        .editor-wrapper, .preview-wrapper { display: flex; flex-grow: 1; width: 100%; position: relative; }
         .preview-wrapper { display: none; background: #fff; }
         
         .split-mode .editor-wrapper { width: 50%; border-right: 1px solid var(--glass-border); }
         .split-mode .preview-wrapper { width: 50%; display: flex; }
 
         .line-numbers { 
-            width: 55px; min-width: 55px; background: rgba(0,0,0,0.3); border-right: 1px solid var(--glass-border); 
-            padding: 20px 0; text-align: right; color: #475569; font-family: var(--font-mono); 
+            width: 50px; min-width: 50px; background: rgba(0,0,0,0.2); border-right: 1px solid var(--glass-border); 
+            padding: 24px 0; text-align: right; color: var(--text-muted); font-family: var(--font-mono); 
             font-size: var(--editor-font-size); line-height: 1.6; user-select: none; overflow: hidden; 
         }
-        .line-numbers span { display: block; padding-right: 15px; }
-        .line-numbers span.active-line { color: var(--accent-main); background: rgba(0, 210, 255, 0.05); border-right: 2px solid var(--accent-main); font-weight: bold;}
+        .line-numbers span { display: block; padding-right: 12px; transition: color 0.1s; }
+        .line-numbers span.active-line { color: var(--text-primary); background: rgba(255,255,255,0.03); font-weight: bold; border-right: 2px solid var(--text-primary); }
 
         #editor { 
-            flex-grow: 1; padding: 20px; font-size: var(--editor-font-size); line-height: 1.6; 
+            flex-grow: 1; padding: 24px; font-size: var(--editor-font-size); line-height: 1.6; 
             color: #e2e8f0; background: transparent; border: none; outline: none; resize: none; 
             overflow-y: auto; font-family: var(--font-mono); white-space: pre; tab-size: 4; 
         }
+        #editor::placeholder { color: rgba(255,255,255,0.2); }
+        
         #preview-frame { width: 100%; height: 100%; border: none; background: #fff; }
-        #preview-text { display: none; width: 100%; height: 100%; padding: 30px; overflow-y: auto; background: #0b0f19; line-height: 1.6; color: #fff; font-size: var(--editor-font-size); }
+        #preview-text { 
+            display: none; width: 100%; height: 100%; padding: 30px; overflow-y: auto; 
+            background: #0d1117; color: #c9d1d9; font-size: var(--editor-font-size); 
+            font-family: var(--font-mono); line-height: 1.6; 
+        }
 
         /* =========================================
            TERMINAL / CONSOLE
            ========================================= */
-        #terminal-panel { height: 180px; border-top: 1px solid var(--glass-border); display: none; flex-direction: column; }
-        .terminal-header { padding: 8px 15px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; font-size: 0.8rem; font-family: var(--font-mono); color: var(--text-secondary); }
-        .terminal-output { flex-grow: 1; padding: 10px; overflow-y: auto; font-family: var(--font-mono); font-size: calc(var(--editor-font-size) - 1px); background: rgba(0,0,0,0.5); }
-        .log-line { border-bottom: 1px dashed rgba(255,255,255,0.05); padding: 4px 0; }
-        .log-error { color: var(--danger); background: rgba(255,71,87,0.05); }
+        #terminal-panel { height: 220px; border-top: 1px solid var(--glass-border); display: none; flex-direction: column; background: rgba(5,5,8,0.7); backdrop-filter: blur(10px); }
+        .terminal-header { 
+            padding: 10px 16px; background: rgba(0,0,0,0.4); border-bottom: 1px solid var(--glass-border); 
+            display: flex; justify-content: space-between; align-items: center; 
+            font-size: 0.75rem; font-weight: 600; font-family: var(--font-sans); color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;
+        }
+        .terminal-output { flex-grow: 1; padding: 12px 16px; overflow-y: auto; font-family: var(--font-mono); font-size: calc(var(--editor-font-size) - 1px); line-height: 1.5; }
+        .log-line { border-bottom: 1px solid rgba(255,255,255,0.03); padding: 6px 0; display: flex; gap: 10px; }
+        .log-time { color: var(--text-muted); font-size: 0.8em; }
+        .log-error { color: var(--danger); background: linear-gradient(90deg, rgba(255,71,87,0.05) 0%, transparent 100%); }
         .log-warn { color: var(--warning); }
         .log-info { color: var(--accent-main); }
-        .terminal-clear { cursor: pointer; color: var(--text-secondary); transition: 0.2s; } 
+        .terminal-clear { cursor: pointer; color: var(--text-muted); transition: 0.2s; text-transform: none; font-weight: 500; letter-spacing: normal; display: flex; align-items: center; gap: 5px;} 
         .terminal-clear:hover { color: var(--danger); }
 
         /* =========================================
            STATUS BAR
            ========================================= */
-        .status-bar { border-top: 1px solid var(--glass-border); padding: 6px 15px; display: flex; justify-content: space-between; font-size: 0.75rem; color: #64748b; font-family: var(--font-mono); background: rgba(0,0,0,0.2); }
-        .status-left span, .status-right span { margin-right: 15px; } 
-        .status-right span { margin-left: 15px; margin-right: 0; }
-        .dbp-tag { color: #000; font-weight: bold; background: var(--accent-main); padding: 2px 10px; border-radius: var(--radius-sm); box-shadow: 0 0 10px var(--accent-glow); transition: 0.3s; }
+        .status-bar { 
+            border-top: 1px solid var(--glass-border); padding: 6px 16px; display: flex; 
+            justify-content: space-between; align-items: center; font-size: 0.75rem; 
+            color: var(--text-muted); font-family: var(--font-mono); background: rgba(0,0,0,0.4); 
+            border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+        }
+        .status-left span { margin-right: 16px; } 
+        .status-right span { margin-left: 16px; }
+        .dbp-tag { 
+            color: #000; font-weight: 700; background: var(--accent-main); padding: 2px 12px; 
+            border-radius: 12px; font-family: var(--font-sans); letter-spacing: 0.5px; box-shadow: 0 0 10px rgba(0,210,255,0.2);
+        }
 
         /* =========================================
-           MODALS, ALERTS & SCROLLBARS
+           MODALS & COMMAND PALETTE
            ========================================= */
-        ::-webkit-scrollbar { width: 8px; height: 8px; } 
-        ::-webkit-scrollbar-track { background: transparent; } 
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(0, 210, 255, 0.3); }
+        .cmd-palette { 
+            display: none; position: fixed; top: 15%; left: 50%; transform: translateX(-50%); 
+            width: 500px; z-index: 200; flex-direction: column; overflow: hidden;
+            background: rgba(20, 20, 25, 0.75); border: 1px solid var(--glass-border); border-radius: var(--radius-lg);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); backdrop-filter: var(--glass-blur);
+        }
+        .cmd-input { width: 100%; padding: 20px; background: transparent; border: none; border-bottom: 1px solid var(--glass-border); color: #fff; outline: none; font-size: 1.1rem; font-family: var(--font-sans); }
+        .cmd-results { max-height: 350px; overflow-y: auto; padding: 8px; } 
+        .cmd-item { padding: 14px 18px; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; border-radius: var(--radius-sm); transition: 0.15s; margin-bottom: 2px;} 
+        .cmd-item:hover { background: rgba(0, 210, 255, 0.1); color: #fff; }
 
-        .cmd-palette { display: none; position: fixed; top: 15%; left: 50%; transform: translateX(-50%); width: 500px; border-radius: var(--radius-lg); z-index: 200; flex-direction: column; overflow: hidden; }
-        .cmd-input { width: 100%; padding: 18px; background: rgba(0,0,0,0.4); border: none; border-bottom: 1px solid var(--glass-border); color: #fff; outline: none; font-family: var(--font-sans); font-size: 1rem; }
-        .cmd-results { max-height: 300px; overflow-y: auto; background: rgba(0,0,0,0.2); } 
-        .cmd-item { padding: 12px 18px; color: var(--text-secondary); cursor: pointer; display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.02); transition: 0.2s; } 
-        .cmd-item:hover { background: rgba(0, 210, 255, 0.1); color: #fff; padding-left: 22px; border-left: 3px solid var(--accent-main); }
-
-        .dialog-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; }
-        .dialog-box { border-radius: var(--radius-lg); padding: 30px; width: 380px; text-align: center; font-family: var(--font-sans); }
-        .dialog-box h3 { margin-bottom: 15px; color: #fff; font-size: 1.3rem; }
-        .dialog-box p { margin-bottom: 25px; color: var(--text-secondary); font-size: 1rem; line-height: 1.5; }
-        .dialog-actions { display: flex; justify-content: center; gap: 15px; }
-        .dialog-btn { padding: 10px 25px; border-radius: var(--radius-md); border: none; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 0.9rem; }
-        .cancel-btn { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--glass-border); }
-        .cancel-btn:hover { background: rgba(255,255,255,0.15); }
-        .confirm-btn { background: var(--accent-main); color: #000; box-shadow: 0 0 15px var(--accent-glow); }
-        .confirm-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px var(--accent-glow); }
+        .dialog-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 1000; justify-content: center; align-items: center; }
+        .dialog-box { padding: 32px; width: 400px; text-align: center; border-radius: var(--radius-lg); border: 1px solid var(--glass-border); background: linear-gradient(145deg, rgba(30,30,35,0.8), rgba(15,15,20,0.9)); box-shadow: 0 20px 50px rgba(0,0,0,0.5);}
+        .dialog-box h3 { margin-bottom: 16px; color: #fff; font-size: 1.3rem; font-weight: 600;}
+        .dialog-box p { margin-bottom: 28px; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; }
+        .dialog-actions { display: flex; gap: 12px; justify-content: center;}
+        .dialog-btn { padding: 12px 24px; border-radius: var(--radius-sm); border: none; cursor: pointer; font-weight: 600; transition: 0.2s; flex: 1; font-size: 0.9rem;}
+        .cancel-btn { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); }
+        .cancel-btn:hover { background: rgba(255,255,255,0.1); }
+        .confirm-btn { background: var(--accent-main); color: #000; }
+        .confirm-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,210,255,0.3); }
 
         /* =========================================
            MOBILE OPTIMIZATIONS
            ========================================= */
         @media (max-width: 768px) {
-            #workspace-container { padding: 0; }
-            #sidebar-container { position: absolute; left: 0; top: 0; height: 100vh; transform: translateX(-100%); transition: 0.3s; padding: 0; }
-            #sidebar-container:not(.hidden) { transform: translateX(0); box-shadow: 10px 0 40px rgba(0,0,0,0.8); }
-            #sidebar { width: 280px; max-width: 85vw; border-radius: 0; margin-right: 0; }
-            #workspace { border-radius: 0; border: none; }
+            body { padding: 0; gap: 0; } 
+            .glass-panel { border-radius: 0; border: none; }
+            #sidebar-container { 
+                position: absolute; left: 0; top: 0; 
+                width: 100%; max-width: 320px; z-index: 50; 
+                margin-left: 0 !important; /* Disable margin anim on mobile */
+                transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease;
+            }
+            #sidebar-container:not(.hidden) { box-shadow: 10px 0 40px rgba(0,0,0,0.8); }
+            #sidebar-container.hidden { transform: translateX(-100%); opacity: 0; pointer-events: none; }
+            #sidebar { border-right: 1px solid var(--glass-border); width: 100%; }
             .resizer { display: none; } 
-            
-            .toolbar { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 12px; }
-            .filename-input, .folder-select { min-width: 120px; }
+            .toolbar { padding: 12px; gap: 8px; justify-content: flex-start;}
+            .filename-input { width: 140px; }
+            .folder-select { width: 130px; }
             .icon-btn::after { display: none !important; } 
-            
             .split-container.split-mode { flex-direction: column; }
             .split-mode .editor-wrapper, .split-mode .preview-wrapper { width: 100% !important; height: 50%; border-right: none; }
             .split-mode .editor-wrapper { border-bottom: 1px solid var(--glass-border); }
-            
-            .cmd-palette { width: 90%; top: 10%; }
+            .cmd-palette { width: 95%; top: 5%; }
+            .status-bar { border-radius: 0; }
             .status-bar .status-left span:nth-child(2), .status-bar .status-left span:nth-child(3) { display: none; }
         }
     </style>
@@ -330,10 +448,10 @@
 
     <div id="login-overlay">
         <div class="login-box glass-panel">
-            <h1>DBP <span>Authenticator</span></h1>
-            <input type="password" id="login-pass" class="login-input" placeholder="Enter Master Key">
+            <h1>DBP <span>Workspace</span></h1>
+            <input type="password" id="login-pass" class="login-input" placeholder="Enter Access Key">
             <button id="login-btn" class="login-btn">Unlock Workspace</button>
-            <div id="login-error">Invalid Credentials. Access Denied.</div>
+            <div id="login-error">Access Denied. Invalid credentials.</div>
         </div>
     </div>
 
@@ -343,7 +461,7 @@
             <p id="dialog-message"></p>
             <div class="dialog-actions">
                 <button id="dialog-btn-cancel" class="dialog-btn cancel-btn">Cancel</button>
-                <button id="dialog-btn-confirm" class="dialog-btn confirm-btn">OK</button>
+                <button id="dialog-btn-confirm" class="dialog-btn confirm-btn">Confirm</button>
             </div>
         </div>
     </div>
@@ -351,16 +469,16 @@
     <div id="prompt-dialog-overlay" class="dialog-overlay">
         <div class="dialog-box glass-panel">
             <h3 id="prompt-title">Enter Value</h3>
-            <input type="text" id="prompt-input" class="login-input" style="margin-bottom: 20px;">
+            <input type="text" id="prompt-input" class="login-input" style="margin-bottom: 24px; letter-spacing: normal;">
             <div class="dialog-actions">
                 <button id="prompt-btn-cancel" class="dialog-btn cancel-btn">Cancel</button>
-                <button id="prompt-btn-confirm" class="dialog-btn confirm-btn">Create</button>
+                <button id="prompt-btn-confirm" class="dialog-btn confirm-btn">Save</button>
             </div>
         </div>
     </div>
 
     <div id="cmd-palette" class="cmd-palette glass-panel">
-        <input type="text" id="cmd-input" class="cmd-input" placeholder="Search or type '>' for commands...">
+        <input type="text" id="cmd-input" class="cmd-input" placeholder="Search files or type '>' for commands...">
         <div id="cmd-results" class="cmd-results"></div>
     </div>
 
@@ -370,13 +488,19 @@
     <div id="sidebar-container" class="hidden">
         <aside id="sidebar" class="glass-panel">
             <div class="sidebar-header">
-                <div class="brand"><h1>DBP <span>Notepad</span></h1></div>
-                <input type="text" id="search-input" class="search-box" placeholder="Search Database...">
+                <div class="brand">
+                    <h1>DBP <span>Notepad</span></h1>
+                </div>
+                <div class="workspace-stats" id="workspace-stats">
+                    <span>Storage occupied:</span>
+                    <span id="workspace-total-size" style="color: var(--accent-main); font-weight: bold;">0 B</span>
+                </div>
+                <input type="text" id="search-input" class="search-box" placeholder="Search explorer...">
                 <div class="sidebar-actions">
-                    <button class="sidebar-btn primary" id="btn-new">+ File</button>
-                    <button class="sidebar-btn primary" id="btn-new-folder" style="color: var(--warning); border-color: rgba(255, 165, 2, 0.3); background: rgba(255, 165, 2, 0.05);">+ Folder</button>
-                    <button class="sidebar-btn" id="btn-backup" title="Backup Entire Workspace">📦 Export DB</button>
-                    <button class="sidebar-btn" id="btn-restore" title="Restore Workspace">📥 Load DB</button>
+                    <button class="sidebar-btn primary" id="btn-new">📄 File</button>
+                    <button class="sidebar-btn" id="btn-new-folder" style="color: var(--warning); border-color: rgba(245, 158, 11, 0.2); background: rgba(245, 158, 11, 0.05);">📁 Folder</button>
+                    <button class="sidebar-btn" id="btn-backup" title="Backup Entire Workspace">📥 Export</button>
+                    <button class="sidebar-btn" id="btn-restore" title="Restore Workspace">📤 Import</button>
                 </div>
             </div>
             <div id="notes-list"></div>
@@ -386,58 +510,62 @@
 
     <div id="workspace-container">
         <main id="workspace" class="glass-panel">
+            
             <div class="tabs">
-                <div class="tab active" id="tab-editor">Editor</div>
-                <div class="tab" id="tab-preview">Preview</div>
-                <button class="toggle-sidebar" id="btn-toggle-sidebar" title="Toggle Sidebar">🗂️</button>
+                <div class="tab active" id="tab-editor">Code Editor</div>
+                <div class="tab" id="tab-preview">Live Preview</div>
+                <button class="toggle-sidebar" id="btn-toggle-sidebar" title="Toggle Explorer">🗂️</button>
             </div>
 
             <div class="toolbar">
-                <input type="text" id="filename-input" class="filename-input" placeholder="untitled.html">
+                <div class="filename-wrapper">
+                    <input type="text" id="filename-input" class="filename-input" placeholder="untitled.js">
+                    <div class="unsaved-dot" id="unsaved-indicator"></div>
+                </div>
                 
-                <select id="folder-select" class="folder-select" title="Assign to Folder">
-                    <option value="root">/ Root</option>
+                <select id="folder-select" class="folder-select" title="File Directory">
+                    <option value="main_workspace">/ Root</option>
                 </select>
 
-                <div class="unsaved-dot" id="unsaved-indicator"></div>
                 <div class="divider"></div>
                 
-                <button class="icon-btn primary" id="btn-launch" data-tooltip="Launch in Browser">🚀</button>
-                <button class="icon-btn" id="btn-import" data-tooltip="Open Local File">📂</button>
-                <button class="icon-btn" id="btn-save" data-tooltip="Sync to Firebase (Ctrl+S)">💾</button>
-                <button class="icon-btn" id="btn-export" data-tooltip="Download as Single File">📥</button>
-                <button class="icon-btn danger" id="btn-delete" data-tooltip="Permanently Delete File">🗑️</button>
+                <button class="icon-btn primary" id="btn-launch" data-tooltip="Run in Browser">🚀</button>
+                <button class="icon-btn" id="btn-import" data-tooltip="Upload File">📂</button>
+                <button class="icon-btn" id="btn-save" data-tooltip="Save to Cloud (Ctrl+S)">💾</button>
+                <button class="icon-btn" id="btn-duplicate" data-tooltip="Clone File">📄</button>
+                <button class="icon-btn" id="btn-export" data-tooltip="Download File">📥</button>
+                <button class="icon-btn danger" id="btn-delete" data-tooltip="Delete File">🗑️</button>
                 
                 <div class="divider"></div>
-                <button class="icon-btn" id="btn-split" data-tooltip="Split Screen Mode">◨</button>
+                
+                <button class="icon-btn" id="btn-split" data-tooltip="Split View">◨</button>
                 <button class="icon-btn" id="btn-console" data-tooltip="Toggle Terminal">📟</button>
-                <button class="icon-btn" id="btn-wrap" data-tooltip="Toggle Word Wrap">🔄</button>
+                <button class="icon-btn" id="btn-wrap" data-tooltip="Word Wrap">🔄</button>
                 <button class="icon-btn" id="btn-palette" data-tooltip="Command Palette (Ctrl+P)">⌨️</button>
 
-                <div class="divider" style="margin-left: auto;"></div>
+                <div class="divider"></div>
                 
-                <button class="icon-btn" id="btn-theme" data-tooltip="Cycle Theme">🎨</button>
-                
-                <button class="icon-btn" id="btn-zoom-out" data-tooltip="Decrease Font Size">A-</button>
-                <button class="icon-btn" id="btn-zoom-in" data-tooltip="Increase Font Size">A+</button>
+                <button class="icon-btn" id="btn-theme" data-tooltip="Switch Theme">🎨</button>
+                <button class="icon-btn" id="btn-zoom-out" data-tooltip="Decrease Font">A-</button>
+                <button class="icon-btn" id="btn-zoom-in" data-tooltip="Increase Font">A+</button>
             </div>
 
             <div class="workspace-core">
                 <div class="split-container" id="split-container">
                     <div class="editor-wrapper" id="editor-wrapper">
                         <div class="line-numbers" id="line-numbers"></div>
-                        <textarea id="editor" spellcheck="false" placeholder="Write logic here... Try typing '!html' or 'clg' and press Tab!"></textarea>
+                        <textarea id="editor" spellcheck="false" placeholder="// Start coding... Try '!html' or 'clg' + Tab"></textarea>
                     </div>
                     <div class="preview-wrapper" id="preview-wrapper">
-                        <iframe id="preview-frame" sandbox="allow-scripts allow-modals"></iframe>
+                        <iframe id="preview-frame" sandbox="allow-scripts allow-modals allow-same-origin"></iframe>
                         <div id="preview-text"></div>
                     </div>
                 </div>
                 
-                <div id="terminal-panel" class="glass-panel">
+                <div id="terminal-panel">
                     <div class="terminal-header">
-                        <span>DBP Console Output</span>
-                        <span class="terminal-clear" onclick="document.getElementById('terminal-output').innerHTML=''">🚫 Clear</span>
+                        <span>Terminal Console</span>
+                        <span class="terminal-clear" onclick="document.getElementById('terminal-output').innerHTML=''">🚫 Clear Console</span>
                     </div>
                     <div class="terminal-output" id="terminal-output"></div>
                 </div>
@@ -445,10 +573,10 @@
 
             <footer class="status-bar">
                 <div class="status-left">
-                    <span id="stat-type">TXT</span>
+                    <span id="stat-type" style="font-weight: 600; color: var(--text-primary);">TXT</span>
                     <span id="stat-size">0 B</span>
                     <span id="stat-lines">1 Ln</span>
-                    <span id="stat-save" style="color: var(--success); display: none; text-shadow: 0 0 5px var(--success);">Saved to Cloud</span>
+                    <span id="stat-save" style="color: var(--success); display: none; text-shadow: 0 0 5px rgba(16, 185, 129, 0.4);">✓ Cloud Synced</span>
                 </div>
                 <div class="status-right">
                     <span id="stat-cursor">Ln 1, Col 1</span>
@@ -463,25 +591,20 @@
         import { getFirestore, collection, getDocs, setDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // ==========================================
-        // 0. THEME ENGINE (Safely Isolated)
+        // 0. CONFIG & THEMES
         // ==========================================
+        const MASTER_PASS = "DBP_236562_DBP_9827700975_DBP";
+
         const themes = [
-            { bg: "radial-gradient(circle, #332e2e, #000000)", accent: "#00d2ff", glow: "rgba(0, 210, 255, 0.4)" }, // Your requested base
-            { bg: "radial-gradient(circle, #1a1a2e, #000000)", accent: "#a277ff", glow: "rgba(162, 119, 255, 0.4)" }, // Midnight
-            { bg: "radial-gradient(circle, #2b1111, #000000)", accent: "#ff4757", glow: "rgba(255, 71, 87, 0.4)" },   // Crimson
-            { bg: "radial-gradient(circle, #122217, #000000)", accent: "#2ed573", glow: "rgba(46, 213, 115, 0.4)" },  // Forest
-            { bg: "radial-gradient(circle, #292010, #000000)", accent: "#ffa502", glow: "rgba(255, 165, 2, 0.4)" }    // Amber
+            { bg: "radial-gradient(circle at center, #3a3232 0%, #050505 100%)", accent: "#00d2ff", glow: "rgba(0, 210, 255, 0.3)" },
+            { bg: "radial-gradient(circle at center, #252542 0%, #050508 100%)", accent: "#a277ff", glow: "rgba(162, 119, 255, 0.3)" },
+            { bg: "radial-gradient(circle at center, #3a1a1a 0%, #080303 100%)", accent: "#ff4757", glow: "rgba(255, 71, 87, 0.3)" },
+            { bg: "radial-gradient(circle at center, #1a3a25 0%, #030805 100%)", accent: "#10b981", glow: "rgba(16, 185, 129, 0.3)" },
+            { bg: "radial-gradient(circle at center, #3a2e15 0%, #080603 100%)", accent: "#f59e0b", glow: "rgba(245, 158, 11, 0.3)" }
         ];
         
-        let currentThemeIdx = 0;
-        const savedTheme = localStorage.getItem('dbp_theme');
-        if (savedTheme !== null) {
-            const parsed = parseInt(savedTheme, 10);
-            if (!isNaN(parsed) && parsed >= 0 && parsed < themes.length) {
-                currentThemeIdx = parsed;
-            }
-        }
-
+        let currentThemeIdx = parseInt(localStorage.getItem('dbp_theme') || '0', 10);
+        
         function applyTheme(idx) {
             if (!themes[idx]) return;
             const t = themes[idx];
@@ -490,19 +613,15 @@
             document.documentElement.style.setProperty('--accent-glow', t.glow);
             localStorage.setItem('dbp_theme', idx.toString());
         }
-        applyTheme(currentThemeIdx); // Apply immediately on script load
+        applyTheme(currentThemeIdx);
 
         // ==========================================
-        // 1. INITIALIZATION & STATE
+        // 1. STATE & DOM ELEMENTS
         // ==========================================
-        const loginOverlay = document.getElementById('login-overlay');
-        const loginBtn = document.getElementById('login-btn');
-        const loginPass = document.getElementById('login-pass');
-        const loginError = document.getElementById('login-error');
-
         const state = { 
-            db: null, currentId: null, notes: [], folders: [], expandedFolders: new Set(['root']), fontSize: 14, 
-            isDirty: false, isWrapped: false, isSplit: false, isTerminalOpen: false 
+            db: null, currentId: null, notes: [], folders: [], 
+            expandedFolders: new Set(['main_workspace']), 
+            fontSize: 14, isDirty: false, isWrapped: false, isSplit: false, isTerminalOpen: false 
         };
 
         const els = {
@@ -520,51 +639,84 @@
             cmdPalette: document.getElementById('cmd-palette'),
             cmdInput: document.getElementById('cmd-input'), 
             cmdResults: document.getElementById('cmd-results'),
-            fileImport: document.getElementById('file-import')
+            fileImport: document.getElementById('file-import'),
+            fileRestore: document.getElementById('file-restore'),
+            workspaceTotal: document.getElementById('workspace-total-size')
         };
 
-        const CustomDialog = {
+        // ==========================================
+        // 2. UTILITY MODULES
+        // ==========================================
+        const UI = {
+            formatBytes: (bytes, decimals = 2) => {
+                if (!+bytes) return '0 B';
+                const k = 1024, dm = decimals < 0 ? 0 : decimals;
+                const sizes = ['B', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+            },
+            setDirty: (isDirty) => {
+                state.isDirty = isDirty;
+                els.unsavedIndicator.style.display = isDirty ? 'block' : 'none';
+            },
+            getIcon: (filename) => {
+                if(!filename.includes('.')) return { i:'📄', c:'' }; 
+                const ext = filename.split('.').pop().toLowerCase();
+                const map = { 
+                    html: {i:'🌐', c:'ext-html'}, htm: {i:'🌐', c:'ext-html'}, 
+                    css: {i:'🎨', c:'ext-css'}, js: {i:'⚡', c:'ext-js'}, 
+                    json: {i:'⚙️', c:'ext-json'}, md: {i:'📝', c:'ext-md'}, 
+                    ino: {i:'🔌', c:'ext-ino'}, py: {i:'🐍', c:'ext-py'} 
+                };
+                return map[ext] || {i:'📄', c:''};
+            }
+        };
+
+        const Dialog = {
             show: (title, msg, showCancel) => {
                 return new Promise((resolve) => {
                     const overlay = document.getElementById('custom-dialog-overlay');
                     document.getElementById('dialog-title').innerText = title;
                     document.getElementById('dialog-message').innerText = msg;
+                    
                     const btnCancel = document.getElementById('dialog-btn-cancel');
                     const btnConfirm = document.getElementById('dialog-btn-confirm');
                     
-                    btnCancel.style.display = showCancel ? 'inline-block' : 'none';
+                    btnCancel.style.display = showCancel ? 'block' : 'none';
                     overlay.style.display = 'flex';
                     
                     btnConfirm.onclick = () => { overlay.style.display = 'none'; resolve(true); };
                     btnCancel.onclick = () => { overlay.style.display = 'none'; resolve(false); };
                 });
             },
-            alert: (msg) => CustomDialog.show("Alert", msg, false),
-            confirm: (msg) => CustomDialog.show("Confirm Action", msg, true),
+            alert: (msg) => Dialog.show("Alert", msg, false),
+            confirm: (msg) => Dialog.show("Confirm Action", msg, true),
             prompt: (title, placeholder) => {
                 return new Promise((resolve) => {
                     const overlay = document.getElementById('prompt-dialog-overlay');
                     const input = document.getElementById('prompt-input');
+                    
                     document.getElementById('prompt-title').innerText = title;
                     input.placeholder = placeholder;
                     input.value = '';
                     overlay.style.display = 'flex';
                     input.focus();
 
-                    const btnCancel = document.getElementById('prompt-btn-cancel');
-                    const btnConfirm = document.getElementById('prompt-btn-confirm');
-
                     const submit = () => { overlay.style.display = 'none'; resolve(input.value.trim()); };
                     
-                    btnConfirm.onclick = submit;
-                    btnCancel.onclick = () => { overlay.style.display = 'none'; resolve(null); };
-                    input.onkeydown = (e) => { if(e.key === 'Enter') submit(); if(e.key === 'Escape') btnCancel.click(); };
+                    document.getElementById('prompt-btn-confirm').onclick = submit;
+                    document.getElementById('prompt-btn-cancel').onclick = () => { overlay.style.display = 'none'; resolve(null); };
+                    
+                    input.onkeydown = (e) => { 
+                        if(e.key === 'Enter') submit(); 
+                        if(e.key === 'Escape') document.getElementById('prompt-btn-cancel').click(); 
+                    };
                 });
             }
         };
 
         // ==========================================
-        // 2. FIREBASE & CORE FUNCTIONS
+        // 3. FIREBASE INTEGRATION
         // ==========================================
         const DB = {
             init: () => {
@@ -581,8 +733,10 @@
             },
             getAll: async () => {
                 try {
-                    const filesSnap = await getDocs(collection(state.db, "files"));
-                    const foldersSnap = await getDocs(collection(state.db, "folders"));
+                    const [filesSnap, foldersSnap] = await Promise.all([
+                        getDocs(collection(state.db, "files")),
+                        getDocs(collection(state.db, "folders"))
+                    ]);
                     
                     const files = []; const folders = [];
                     filesSnap.forEach(doc => files.push(doc.data()));
@@ -592,91 +746,132 @@
                         files: files.sort((a,b) => b.updatedAt - a.updatedAt),
                         folders: folders.sort((a,b) => b.createdAt - a.createdAt)
                     };
-                } catch(e) {
-                    console.error("Firebase Read Error:", e);
-                    return { files: [], folders: [] };
+                } catch(e) { 
+                    console.error("Firebase Read Error:", e); 
+                    return { files: [], folders: [] }; 
                 }
             },
-            saveFile: async (file) => {
-                try { await setDoc(doc(state.db, "files", file.id), file); return file; } 
-                catch (e) { console.error(e); throw e; }
-            },
-            deleteFile: async (id) => {
-                try { await deleteDoc(doc(state.db, "files", id)); } 
-                catch (e) { console.error(e); }
-            },
-            saveFolder: async (folder) => {
-                try { await setDoc(doc(state.db, "folders", folder.id), folder); return folder; }
-                catch (e) { console.error(e); throw e; }
-            }
+            saveFile: async (file) => await setDoc(doc(state.db, "files", file.id), file),
+            deleteFile: async (id) => await deleteDoc(doc(state.db, "files", id)),
+            saveFolder: async (folder) => await setDoc(doc(state.db, "folders", folder.id), folder),
+            deleteFolder: async (id) => await deleteDoc(doc(state.db, "folders", id))
         };
 
-        async function initFirebaseApp() { 
-            DB.init(); 
-            setupEvents(); 
-            
-            try {
-                await fetchDatabase(); 
-                if (state.notes.length > 0) {
-                    await openFile(state.notes[0].id); 
-                } else {
-                    await createNewFile(); 
-                }
-            } catch (error) {
-                console.error("Boot Error:", error);
-                await createNewFile(); 
-            }
-        }
-
-        function setDirty(s) { 
-            state.isDirty = s; 
-            els.unsavedIndicator.style.display = s ? 'block' : 'none'; 
-        }
-
-        function getIconData(fn) {
-            if(!fn.includes('.')) return {i:'📄', c:''}; 
-            const ext = fn.split('.').pop().toLowerCase();
-            const map = { 
-                html: {i:'🌐', c:'ext-html'}, htm: {i:'🌐', c:'ext-html'}, 
-                css: {i:'🎨', c:'ext-css'}, js: {i:'⚡', c:'ext-js'}, 
-                json: {i:'⚙️', c:'ext-json'}, md: {i:'📝', c:'ext-md'}, 
-                ino: {i:'🔌', c:'ext-ino'}, py: {i:'🐍', c:'ext-py'} 
-            };
-            return map[ext] || {i:'📄', c:''};
-        }
-
+        // ==========================================
+        // 4. CORE APPLICATION LOGIC
+        // ==========================================
         async function fetchDatabase() {
             const data = await DB.getAll(); 
-            state.notes = data.files;
+            state.notes = data.files; 
             state.folders = data.folders;
-            updateFolderSelects();
+            
+            let totalWorkspaceBytes = 0;
+            state.notes.forEach(f => {
+                const size = new Blob([f.content || '']).size;
+                f._computedSize = size;
+                totalWorkspaceBytes += size;
+            });
+            
+            els.workspaceTotal.innerText = UI.formatBytes(totalWorkspaceBytes);
+            updateFolderSelects(); 
             renderSidebar(document.getElementById('search-input').value);
         }
 
         function updateFolderSelects() {
             const currentVal = els.folderSelect.value;
-            els.folderSelect.innerHTML = '<option value="root">/ Root</option>';
+            els.folderSelect.innerHTML = '<option value="main_workspace">/ Root Workspace</option>';
+            
             state.folders.forEach(f => {
                 const opt = document.createElement('option');
-                opt.value = f.id; opt.innerText = `📁 ${f.name}`;
+                opt.value = f.id; 
+                opt.innerText = `📁 ${f.name}`;
                 els.folderSelect.appendChild(opt);
             });
-            if(Array.from(els.folderSelect.options).some(o => o.value === currentVal)) {
+            
+            if (Array.from(els.folderSelect.options).some(o => o.value === currentVal)) {
                 els.folderSelect.value = currentVal;
             }
         }
 
-        function createNoteCardHTML(f) {
+        // --- Sidebar Rendering ---
+        function renderSidebar(filter = '') {
+            els.notesList.innerHTML = '';
+            const searchLower = filter.toLowerCase();
+            const visibleFiles = state.notes.filter(n => (n.filename || '').toLowerCase().includes(searchLower));
+            
+            const filesByFolder = { 'main_workspace': [] };
+            state.folders.forEach(f => filesByFolder[f.id] = []);
+            
+            visibleFiles.forEach(f => {
+                const fId = f.folderId && filesByFolder[f.folderId] ? f.folderId : 'main_workspace';
+                filesByFolder[fId].push(f);
+            });
+
+            state.folders.forEach(folder => {
+                if (filter && filesByFolder[folder.id].length === 0) return;
+                
+                const isCollapsed = state.expandedFolders.has(folder.id) ? '' : 'collapsed';
+                const isEmpty = filesByFolder[folder.id].length === 0;
+                
+                let folderBytes = 0;
+                filesByFolder[folder.id].forEach(f => folderBytes += (f._computedSize || 0));
+                
+                const groupDiv = document.createElement('div');
+                groupDiv.className = `folder-group ${isCollapsed}`;
+                groupDiv.id = `folder-group-${folder.id}`;
+                
+                let html = `
+                    <div class="folder-header" onclick="toggleFolder('${folder.id}')">
+                        <span class="folder-icon">▼</span>
+                        <span class="folder-name">📁 ${folder.name}</span>
+                        <div class="folder-right">
+                            <span class="folder-meta">${filesByFolder[folder.id].length} items</span>
+                            <div class="folder-actions">
+                                <button class="folder-action-btn" title="New File" onclick="createFileInFolder(event, '${folder.id}')">➕</button>
+                                <button class="folder-action-btn" title="Rename" onclick="renameFolder(event, '${folder.id}', '${folder.name}')">✏️</button>
+                                ${isEmpty ? `<button class="folder-action-btn del" title="Delete Empty Folder" onclick="deleteFolder(event, '${folder.id}')">🗑️</button>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="folder-contents">`;
+                
+                filesByFolder[folder.id].forEach(f => html += createNoteCard(f));
+                if (isEmpty) html += `<div style="font-size:0.75rem; color:var(--text-muted); padding: 5px; font-style: italic;">Empty Folder</div>`;
+                
+                html += `</div>`;
+                groupDiv.innerHTML = html; 
+                els.notesList.appendChild(groupDiv);
+            });
+
+            if (filesByFolder['main_workspace'].length > 0) {
+                const rootDiv = document.createElement('div'); 
+                rootDiv.style.marginTop = '16px';
+                
+                rootDiv.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px; padding-left: 8px; font-weight: 600; letter-spacing: 0.5px;">
+                        <span>/ ROOT WORKSPACE</span>
+                        <span>${filesByFolder['main_workspace'].length} items</span>
+                    </div>`;
+                    
+                filesByFolder['main_workspace'].forEach(f => rootDiv.innerHTML += createNoteCard(f));
+                els.notesList.appendChild(rootDiv);
+            }
+            attachCardEvents();
+        }
+
+        function createNoteCard(f) {
             const fn = f.filename || 'Untitled';
-            const icon = getIconData(fn); 
-            const isHtml = fn.toLowerCase().endsWith('.html') || fn.toLowerCase().endsWith('.htm');
-            const textClass = isHtml ? 'text-html' : '';
+            const icon = UI.getIcon(fn); 
+            const sizeStr = UI.formatBytes(f._computedSize || 0);
+            
             return `
                 <div class="note-card ${f.id === state.currentId ? 'active' : ''}" data-id="${f.id}">
                     <div class="note-icon ${icon.c}">${icon.i}</div>
                     <div class="note-info">
-                        <h3 class="${textClass}">${fn}</h3>
-                        <p>${new Date(f.updatedAt).toLocaleDateString()}</p>
+                        <div class="note-info-top">
+                            <h3>${fn}</h3>
+                            <span class="note-size">${sizeStr}</span>
+                        </div>
                     </div>
                 </div>`;
         }
@@ -685,7 +880,7 @@
             document.querySelectorAll('.note-card').forEach(card => {
                 card.onclick = async (e) => {
                     e.stopPropagation();
-                    if(!state.isDirty || await CustomDialog.confirm("Discard unsaved changes?")) {
+                    if (!state.isDirty || await Dialog.confirm("Discard unsaved changes?")) {
                         await openFile(card.dataset.id); 
                         if (window.innerWidth <= 768) {
                             document.getElementById('sidebar-container').classList.add('hidden');
@@ -695,76 +890,66 @@
             });
         }
 
+        // --- File & Folder Operations ---
         window.toggleFolder = (folderId) => {
             const group = document.getElementById(`folder-group-${folderId}`);
-            if(group) {
+            if (group) {
                 group.classList.toggle('collapsed');
-                if(group.classList.contains('collapsed')) state.expandedFolders.delete(folderId);
+                if (group.classList.contains('collapsed')) state.expandedFolders.delete(folderId);
                 else state.expandedFolders.add(folderId);
             }
         };
 
-        function renderSidebar(filter = '') {
-            els.notesList.innerHTML = '';
-            const searchLower = filter.toLowerCase();
-            
-            const visibleFiles = state.notes.filter(n => (n.filename || '').toLowerCase().includes(searchLower));
-            const filesByFolder = { 'root': [] };
-            state.folders.forEach(f => filesByFolder[f.id] = []);
-            
-            visibleFiles.forEach(f => {
-                const fId = f.folderId && filesByFolder[f.folderId] ? f.folderId : 'root';
-                filesByFolder[fId].push(f);
-            });
-
-            state.folders.forEach(folder => {
-                if(filter && filesByFolder[folder.id].length === 0) return;
-
-                const isCollapsed = state.expandedFolders.has(folder.id) ? '' : 'collapsed';
-                
-                const groupDiv = document.createElement('div');
-                groupDiv.className = `folder-group ${isCollapsed}`;
-                groupDiv.id = `folder-group-${folder.id}`;
-                
-                let html = `<div class="folder-header" onclick="toggleFolder('${folder.id}')">
-                                <span class="folder-icon">▼</span> 📁 ${folder.name}
-                            </div>
-                            <div class="folder-contents">`;
-                
-                filesByFolder[folder.id].forEach(f => html += createNoteCardHTML(f));
-                if(filesByFolder[folder.id].length === 0) html += `<div style="font-size:0.75rem; color:#666; padding: 5px;">Empty folder</div>`;
-                
-                html += `</div>`;
-                groupDiv.innerHTML = html;
-                els.notesList.appendChild(groupDiv);
-            });
-
-            if(filesByFolder['root'].length > 0) {
-                const rootDiv = document.createElement('div');
-                rootDiv.style.marginTop = '10px';
-                rootDiv.innerHTML = `<div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px; padding-left: 5px;">/ ROOT FILES</div>`;
-                filesByFolder['root'].forEach(f => rootDiv.innerHTML += createNoteCardHTML(f));
-                els.notesList.appendChild(rootDiv);
+        window.renameFolder = async (e, id, oldName) => {
+            e.stopPropagation();
+            const newName = await Dialog.prompt("Rename Folder:", oldName);
+            if (newName && newName !== oldName) {
+                const folder = state.folders.find(f => f.id === id);
+                if (folder) { 
+                    folder.name = newName; 
+                    await DB.saveFolder(folder); 
+                    await fetchDatabase(); 
+                }
             }
+        };
 
-            attachCardEvents();
-        }
+        window.deleteFolder = async (e, id) => {
+            e.stopPropagation();
+            if (await Dialog.confirm("Delete this empty folder permanently?")) {
+                await DB.deleteFolder(id); 
+                state.folders = state.folders.filter(f => f.id !== id);
+                state.expandedFolders.delete(id); 
+                await fetchDatabase();
+            }
+        };
+
+        window.createFileInFolder = async (e, folderId) => {
+            e.stopPropagation();
+            if (state.isDirty && !(await Dialog.confirm("Discard unsaved changes?"))) return; 
+            state.expandedFolders.add(folderId); 
+            await createNewFile();
+            els.folderSelect.value = folderId; 
+            renderSidebar(document.getElementById('search-input').value); 
+        };
 
         async function createNewFolder() {
-            const name = await CustomDialog.prompt("New Folder Name", "e.g., Robot Scripts");
-            if(name) {
-                const newFolder = { id: 'f_'+Date.now(), name: name, createdAt: Date.now() };
-                await DB.saveFolder(newFolder);
-                state.expandedFolders.add(newFolder.id);
+            const name = await Dialog.prompt("New Folder Name", "e.g., Components");
+            if (name) {
+                const newFolder = { id: 'f_' + Date.now(), name: name, createdAt: Date.now() };
+                await DB.saveFolder(newFolder); 
+                state.expandedFolders.add(newFolder.id); 
                 await fetchDatabase();
             }
         }
 
+        // --- Editor Logic ---
         function autoDetectExtension(content) {
             const text = content.trim();
             if (!text) return '.txt';
             if (/<!DOCTYPE html>|<html/i.test(text) || /<body|<head|<div|<script/i.test(text)) return '.html';
-            if (text.startsWith('{') || text.startsWith('[')) { try { JSON.parse(text); return '.json'; } catch (e) {} }
+            if (text.startsWith('{') || text.startsWith('[')) { 
+                try { JSON.parse(text); return '.json'; } catch (e) {} 
+            }
             if (/#include\s*<|void\s+setup\s*\(\)|void\s+loop\s*\(\)/.test(text)) return '.ino';
             if (/^[.#a-zA-Z0-9\s,-]+\s*\{[^}]+\}/m.test(text) && /:[^;]+;/.test(text)) return '.css';
             if (/function\s+\w+\(|const\s+\w+\s*=|let\s+\w+\s*=|console\.log\(|=>/.test(text)) return '.js';
@@ -773,10 +958,8 @@
         }
 
         async function saveFile() {
-            let fn = els.filenameInput.value.trim(); 
-            if (!fn) fn = 'untitled'; 
+            let fn = els.filenameInput.value.trim() || 'untitled'; 
             if (!fn.includes('.')) fn += autoDetectExtension(els.editor.value);
-            
             els.filenameInput.value = fn;
             
             const file = { 
@@ -790,7 +973,7 @@
             try {
                 await DB.saveFile(file); 
                 state.currentId = file.id; 
-                setDirty(false); 
+                UI.setDirty(false); 
                 
                 const statSave = document.getElementById('stat-save');
                 statSave.style.display = 'inline'; 
@@ -798,7 +981,10 @@
                 
                 await fetchDatabase(); 
                 updatePreview();
-            } catch(err) { console.error(err); }
+            } catch(err) { 
+                console.error(err);
+                Dialog.alert("Failed to save file.");
+            }
         }
 
         async function openFile(id) { 
@@ -808,28 +994,53 @@
             state.currentId = file.id; 
             els.editor.value = file.content || ''; 
             els.filenameInput.value = file.filename; 
-            els.folderSelect.value = file.folderId && state.folders.find(f=>f.id===file.folderId) ? file.folderId : 'root';
             
-            setDirty(false); 
+            const isFolderValid = file.folderId && state.folders.find(f => f.id === file.folderId);
+            els.folderSelect.value = isFolderValid ? file.folderId : 'main_workspace';
+            
+            UI.setDirty(false); 
             updateMetrics(); 
             updatePreview(); 
             renderSidebar(document.getElementById('search-input').value);
         }
 
         async function createNewFile() { 
-            if(state.isDirty && !(await CustomDialog.confirm("Discard unsaved changes?"))) return; 
-            
+            if (state.isDirty && !(await Dialog.confirm("Discard unsaved changes?"))) return; 
             state.currentId = null; 
-            els.editor.value = '';
+            els.editor.value = ''; 
             els.filenameInput.value = ''; 
-            
-            setDirty(false); 
+            els.folderSelect.value = 'main_workspace';
+            UI.setDirty(false); 
             updateMetrics(); 
             els.editor.focus(); 
             updatePreview(); 
             renderSidebar(document.getElementById('search-input').value);
         }
 
+        async function duplicateFile() {
+            if (!state.currentId) return Dialog.alert("No file selected.");
+            const currentFile = state.notes.find(n => n.id === state.currentId); 
+            if (!currentFile) return;
+            
+            let parts = currentFile.filename.split('.'); 
+            let ext = parts.length > 1 ? '.' + parts.pop() : '';
+            
+            const newName = await Dialog.prompt("Duplicate As:", parts.join('.') + '_copy' + ext);
+            if (newName) {
+                const newFile = { 
+                    id: Date.now().toString(), 
+                    filename: newName, 
+                    content: els.editor.value, 
+                    folderId: els.folderSelect.value, 
+                    updatedAt: Date.now() 
+                };
+                await DB.saveFile(newFile); 
+                await fetchDatabase(); 
+                await openFile(newFile.id);
+            }
+        }
+
+        // --- Editor UI Updates ---
         function updateMetrics() {
             const lines = els.editor.value.split('\n'); 
             const pos = els.editor.selectionStart || 0; 
@@ -840,50 +1051,54 @@
             els.lineNumbers.scrollTop = els.editor.scrollTop;
             
             const ext = (els.filenameInput.value || 'TXT').split('.').pop().toUpperCase();
-            document.getElementById('stat-type').innerText = ext;
+            document.getElementById('stat-type').innerText = ext; 
             document.getElementById('stat-lines').innerText = `${lines.length} Ln`; 
-            document.getElementById('stat-size').innerText = `${new Blob([els.editor.value]).size} B`;
+            document.getElementById('stat-size').innerText = UI.formatBytes(new Blob([els.editor.value]).size);
             document.getElementById('stat-cursor').innerText = `Ln ${row}, Col ${cursorLines[row - 1].length + 1}`;
         }
 
         function insertText(text, offset = 0) {
-            const s = els.editor.selectionStart;
+            const s = els.editor.selectionStart; 
             const e = els.editor.selectionEnd; 
             els.editor.value = els.editor.value.substring(0, s) + text + els.editor.value.substring(e);
             els.editor.selectionStart = els.editor.selectionEnd = s + text.length + offset; 
-            setDirty(true); updateMetrics();
+            UI.setDirty(true); 
+            updateMetrics();
         }
 
         els.editor.addEventListener('keydown', function(e) {
             if (e.key === 'Tab') {
-                e.preventDefault();
-                const textBeforeCursor = this.value.substring(0, this.selectionStart);
-                const match = textBeforeCursor.match(/([^\s]+)$/);
+                e.preventDefault(); 
+                const match = this.value.substring(0, this.selectionStart).match(/([^\s]+)$/);
                 if (match) {
-                    const word = match[1];
-                    const snippets = {
-                        '!html': `<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <title>DBP App</title>\n</head>\n<body>\n    \n</body>\n</html>`,
-                        'clg': `console.log();`,
-                        'for': `for (let i = 0; i < array.length; i++) {\n    \n}`
+                    const snippets = { 
+                        '!html': `<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <title>DBP App</title>\n</head>\n<body>\n    \n</body>\n</html>`, 
+                        'clg': `console.log();`, 
+                        'for': `for (let i = 0; i < array.length; i++) {\n    \n}` 
                     };
-                    if (snippets[word]) {
-                        this.value = this.value.substring(0, this.selectionStart - word.length) + snippets[word] + this.value.substring(this.selectionEnd);
-                        this.selectionStart = this.selectionEnd = this.selectionStart - word.length + snippets[word].length - (word==='clg'?2:0);
-                        setDirty(true); updateMetrics(); return;
+                    if (snippets[match[1]]) {
+                        this.value = this.value.substring(0, this.selectionStart - match[1].length) + snippets[match[1]] + this.value.substring(this.selectionEnd);
+                        this.selectionStart = this.selectionEnd = this.selectionStart - match[1].length + snippets[match[1]].length - (match[1]==='clg'?2:0);
+                        UI.setDirty(true); 
+                        updateMetrics(); 
+                        return;
                     }
-                }
+                } 
                 insertText("    ");
             } else if (e.key === 'Enter') {
                 e.preventDefault(); 
                 const currentLine = this.value.substring(0, this.selectionStart).split('\n').pop();
-                const leadingSpaces = currentLine.match(/^\s*/)[0]; 
-                insertText('\n' + leadingSpaces);
+                insertText('\n' + currentLine.match(/^\s*/)[0]);
             } else {
                 const pairs = { '{': '}', '[': ']', '(': ')', '"': '"', "'": "'" };
-                if (pairs[e.key]) { e.preventDefault(); insertText(e.key + pairs[e.key], -1); }
+                if (pairs[e.key]) { 
+                    e.preventDefault(); 
+                    insertText(e.key + pairs[e.key], -1); 
+                }
             }
         });
 
+        // --- Live Preview & Console ---
         const consoleInject = `<script>
             const _log = console.log, _err = console.error, _warn = console.warn;
             console.log = (...a) => { window.parent.postMessage({type:'log', msg:a.join(' ')}, '*'); _log(...a); };
@@ -893,206 +1108,215 @@
         <\/script>`;
 
         window.addEventListener('message', (e) => {
-            if(e.data && e.data.type) {
+            if (e.data && e.data.type) {
                 const div = document.createElement('div'); 
                 div.className = `log-line log-${e.data.type}`;
-                div.innerText = `[${new Date().toLocaleTimeString()}] ${e.data.msg}`;
-                els.terminalOut.appendChild(div); els.terminalOut.scrollTop = els.terminalOut.scrollHeight;
-                if(!state.isTerminalOpen) document.getElementById('btn-console').click(); 
+                div.innerHTML = `<span class="log-time">[${new Date().toLocaleTimeString()}]</span> <span>${e.data.msg}</span>`;
+                
+                els.terminalOut.appendChild(div); 
+                els.terminalOut.scrollTop = els.terminalOut.scrollHeight;
+                
+                if (!state.isTerminalOpen) {
+                    document.getElementById('btn-console').click(); 
+                }
             }
         });
 
         function updatePreview() {
             const ext = els.filenameInput.value.toLowerCase().split('.').pop(); 
-            const pf = document.getElementById('preview-frame');
-            const pt = document.getElementById('preview-text');
             
             if (['html', 'htm'].includes(ext)) { 
-                pf.style.display = 'block'; pt.style.display = 'none'; 
-                pf.srcdoc = consoleInject + els.editor.value; 
+                els.previewWrapper.style.display = state.isSplit ? 'flex' : 'none';
+                document.getElementById('preview-frame').style.display = 'block'; 
+                document.getElementById('preview-text').style.display = 'none'; 
+                document.getElementById('preview-frame').srcdoc = consoleInject + els.editor.value; 
             } else {
-                pf.style.display = 'none'; pt.style.display = 'block';
-                if(ext === 'json') { 
-                    try { pt.innerHTML = `<pre style="color:var(--success);">${JSON.stringify(JSON.parse(els.editor.value), null, 4)}</pre>`; } 
-                    catch(e) { pt.innerHTML = `<div style="color:var(--danger)">Error: ${e.message}</div>`; } 
+                document.getElementById('preview-frame').style.display = 'none'; 
+                document.getElementById('preview-text').style.display = 'block';
+                
+                if (ext === 'json') { 
+                    try { 
+                        document.getElementById('preview-text').innerHTML = `<pre style="color:var(--success);">${JSON.stringify(JSON.parse(els.editor.value), null, 4)}</pre>`; 
+                    } catch(e) { 
+                        document.getElementById('preview-text').innerHTML = `<div style="color:var(--danger)">Parse Error: ${e.message}</div>`; 
+                    } 
                 } else {
-                    pt.innerHTML = els.editor.value.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+                    document.getElementById('preview-text').innerHTML = els.editor.value.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
                 }
             }
         }
 
-        document.getElementById('btn-import').onclick = () => {
-            if(state.isDirty && !window.confirm("You have unsaved changes. Discard them to open a new file?")) return;
-            els.fileImport.click();
-        };
-
-        els.fileImport.onchange = (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async (ev) => {
-                const newFile = { id: Date.now().toString(), filename: file.name, content: ev.target.result, folderId: els.folderSelect.value, updatedAt: Date.now() };
-                await DB.saveFile(newFile);
-                await fetchDatabase();
-                await openFile(newFile.id);
-                CustomDialog.alert(`File "${file.name}" imported successfully!`);
-            };
-            reader.readAsText(file);
-            e.target.value = '';
-        };
-
-        document.getElementById('btn-export').onclick = () => {
-            const filename = els.filenameInput.value || 'export.txt';
-            const ext = filename.split('.').pop().toLowerCase();
-            let mimeType = 'text/plain';
-            if (ext === 'html' || ext === 'htm') mimeType = 'text/html';
-            else if (ext === 'js') mimeType = 'application/javascript';
-            else if (ext === 'css') mimeType = 'text/css';
-            else if (ext === 'json') mimeType = 'application/json';
-
-            const blob = new Blob([els.editor.value], { type: mimeType });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = filename;
-            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-        };
-        
-        document.getElementById('btn-backup').onclick = async () => {
-            const data = await DB.getAll(); 
-            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `DBP_Workspace_Backup_${new Date().getTime()}.dbp`; a.click();
-        };
-
-        document.getElementById('btn-restore').onclick = () => document.getElementById('file-restore').click();
-
-        document.getElementById('file-restore').onchange = (e) => {
-            const file = e.target.files[0]; if(!file) return; 
-            const reader = new FileReader();
-            reader.onload = async (ev) => {
-                try {
-                    const data = JSON.parse(ev.target.result); 
-                    if(!(await CustomDialog.confirm("Merge this backup with your current cloud database?"))) return;
-                    
-                    if(data.folders) for(let f of data.folders) await DB.saveFolder(f);
-                    if(data.files) for(let f of data.files) await DB.saveFile(f); 
-                    
-                    await fetchDatabase(); 
-                    CustomDialog.alert("Workspace Restored!");
-                } catch(err) { CustomDialog.alert("Invalid backup file."); }
-            }; reader.readAsText(file);
-        };
-
-        document.getElementById('btn-delete').onclick = async () => { 
-            if(!state.currentId) return CustomDialog.alert("No saved file is currently selected.");
-            if(await CustomDialog.confirm(`Permanently delete "${els.filenameInput.value}"?`)) { 
-                await DB.deleteFile(state.currentId); 
-                await CustomDialog.alert(`File deleted.`);
-                await fetchDatabase();
-                await createNewFile(); 
-            }
-        };
-
-        document.getElementById('tab-editor').onclick = () => { 
-            document.getElementById('tab-editor').classList.add('active'); 
-            document.getElementById('tab-preview').classList.remove('active'); 
-            els.splitContainer.classList.remove('split-mode'); 
-            state.isSplit = false;
-            document.getElementById('btn-split').classList.remove('active');
-            
-            els.editorWrapper.style.display = 'flex'; 
-            els.editorWrapper.style.width = '100%';
-            els.previewWrapper.style.display = 'none'; 
-        };
-
-        document.getElementById('tab-preview').onclick = () => { 
-            document.getElementById('tab-preview').classList.add('active'); 
-            document.getElementById('tab-editor').classList.remove('active'); 
-            els.splitContainer.classList.remove('split-mode'); 
-            state.isSplit = false;
-            document.getElementById('btn-split').classList.remove('active');
-            
-            els.editorWrapper.style.display = 'none'; 
-            els.previewWrapper.style.display = 'flex'; 
-            els.previewWrapper.style.width = '100%';
-            updatePreview(); 
-        };
-
-        document.getElementById('btn-split').onclick = () => { 
-            state.isSplit = !state.isSplit; 
-            document.getElementById('btn-split').classList.toggle('active', state.isSplit); 
-            
-            if (state.isSplit) {
-                document.getElementById('tab-editor').classList.add('active'); 
-                document.getElementById('tab-preview').classList.add('active'); 
-                els.splitContainer.classList.add('split-mode'); 
-                els.editorWrapper.style.display = 'flex';
-                if (window.innerWidth > 768) {
-                    els.editorWrapper.style.width = '50%';
-                    els.previewWrapper.style.width = '50%';
-                }
-                els.previewWrapper.style.display = 'flex';
-                updatePreview(); 
-            } else {
-                document.getElementById('tab-editor').click();
-            }
-        };
-
-        document.getElementById('btn-console').onclick = () => { 
-            state.isTerminalOpen = !state.isTerminalOpen; 
-            els.terminal.style.display = state.isTerminalOpen ? 'flex' : 'none'; 
-            document.getElementById('btn-console').classList.toggle('active', state.isTerminalOpen); 
-        };
-
-        function applyFontSize() { document.documentElement.style.setProperty('--editor-font-size', `${state.fontSize}px`); updateMetrics(); }
-        document.getElementById('btn-zoom-in').onclick = () => { if (state.fontSize < 40) { state.fontSize += 2; applyFontSize(); }};
-        document.getElementById('btn-zoom-out').onclick = () => { if (state.fontSize > 8) { state.fontSize -= 2; applyFontSize(); }};
-        
-        function togglePalette() { els.cmdPalette.style.display = els.cmdPalette.style.display === 'flex' ? 'none' : 'flex'; if(els.cmdPalette.style.display==='flex') { els.cmdInput.value = ''; els.cmdInput.focus(); updatePalette(); } else els.editor.focus(); }
-        
-        function updatePalette() {
-            const q = els.cmdInput.value.toLowerCase(); els.cmdResults.innerHTML = '';
-            if (q.startsWith('>')) { 
-                const cmds = [ 
-                    { n: 'Split Screen', a: () => document.getElementById('btn-split').click() }, 
-                    { n: 'Toggle Terminal', a: () => document.getElementById('btn-console').click() }, 
-                    { n: 'Export Workspace', a: () => document.getElementById('btn-backup').click() }, 
-                    { n: 'New Folder', a: createNewFolder },
-                    { n: 'Cycle Dark Theme', a: () => document.getElementById('btn-theme').click() }
-                ];
-                cmds.filter(c => c.n.toLowerCase().includes(q.substring(1).trim())).forEach(c => { const d = document.createElement('div'); d.className = 'cmd-item'; d.innerHTML = `<span>⚙️ ${c.n}</span>`; d.onclick = () => { c.a(); togglePalette(); }; els.cmdResults.appendChild(d); });
-            } else { 
-                state.notes.filter(n => (n.filename || '').toLowerCase().includes(q)).forEach(f => { const d = document.createElement('div'); d.className = 'cmd-item'; d.innerHTML = `<span>📄 ${f.filename || 'Untitled'}</span>`; d.onclick = async () => { if(!state.isDirty || await CustomDialog.confirm("Discard?")) openFile(f.id); togglePalette(); }; els.cmdResults.appendChild(d); });
-            }
-        }
-        els.cmdInput.addEventListener('input', updatePalette);
-
+        // ==========================================
+        // 5. EVENT LISTENERS
+        // ==========================================
         function setupEvents() {
-            // Theme button click event attached here safely
-            document.getElementById('btn-theme').onclick = () => {
-                currentThemeIdx = (currentThemeIdx + 1) % themes.length;
-                applyTheme(currentThemeIdx);
-            };
-
-            els.editor.addEventListener('input', () => { setDirty(true); updateMetrics(); });
+            // Editor Input
+            els.editor.addEventListener('input', () => { UI.setDirty(true); updateMetrics(); });
             els.editor.addEventListener('scroll', () => els.lineNumbers.scrollTop = els.editor.scrollTop);
-            els.editor.addEventListener('keyup', updateMetrics); els.editor.addEventListener('click', updateMetrics);
-            els.filenameInput.addEventListener('input', () => setDirty(true));
-            els.folderSelect.addEventListener('change', () => setDirty(true)); 
+            ['keyup', 'click'].forEach(e => els.editor.addEventListener(e, updateMetrics));
+            els.filenameInput.addEventListener('input', () => UI.setDirty(true));
+            els.folderSelect.addEventListener('change', () => UI.setDirty(true)); 
             
+            // Toolbar Actions
             document.getElementById('btn-new').onclick = createNewFile; 
             document.getElementById('btn-new-folder').onclick = createNewFolder; 
-            document.getElementById('btn-save').onclick = saveFile;
+            document.getElementById('btn-save').onclick = saveFile; 
+            document.getElementById('btn-duplicate').onclick = duplicateFile;
+            document.getElementById('btn-theme').onclick = () => { 
+                currentThemeIdx = (currentThemeIdx + 1) % themes.length; applyTheme(currentThemeIdx); 
+            };
             
-            document.getElementById('btn-wrap').onclick = () => { state.isWrapped = !state.isWrapped; els.editor.style.whiteSpace = state.isWrapped ? 'pre-wrap' : 'pre'; document.getElementById('btn-wrap').classList.toggle('active'); };
-            document.getElementById('btn-toggle-sidebar').onclick = () => document.getElementById('sidebar-container').classList.toggle('hidden');
-            document.getElementById('btn-palette').onclick = togglePalette;
-            document.getElementById('btn-launch').onclick = () => { const mimeType = els.filenameInput.value.endsWith('html') ? 'text/html' : 'text/plain'; window.open(URL.createObjectURL(new Blob([els.editor.value], { type: mimeType })), '_blank'); };
+            document.getElementById('btn-wrap').onclick = () => { 
+                state.isWrapped = !state.isWrapped; 
+                els.editor.style.whiteSpace = state.isWrapped ? 'pre-wrap' : 'pre'; 
+                document.getElementById('btn-wrap').classList.toggle('active'); 
+            };
             
+            document.getElementById('btn-toggle-sidebar').onclick = () => {
+                document.getElementById('sidebar-container').classList.toggle('hidden');
+            };
+            
+            document.getElementById('btn-launch').onclick = () => { 
+                const mimeType = els.filenameInput.value.endsWith('html') ? 'text/html' : 'text/plain'; 
+                window.open(URL.createObjectURL(new Blob([els.editor.value], { type: mimeType })), '_blank'); 
+            };
+            
+            document.getElementById('btn-delete').onclick = async () => { 
+                if(!state.currentId) return Dialog.alert("No file selected.");
+                if(await Dialog.confirm(`Delete "${els.filenameInput.value}" permanently?`)) { 
+                    await DB.deleteFile(state.currentId); 
+                    await fetchDatabase(); 
+                    await createNewFile(); 
+                }
+            };
+
+            // Import / Export
+            document.getElementById('btn-import').onclick = async () => { 
+                if(state.isDirty && !(await Dialog.confirm("Unsaved changes. Discard?"))) return; 
+                els.fileImport.click(); 
+            };
+            
+            els.fileImport.onchange = (e) => {
+                const file = e.target.files[0]; if (!file) return; 
+                const reader = new FileReader();
+                reader.onload = async (ev) => {
+                    const newFile = { id: Date.now().toString(), filename: file.name, content: ev.target.result, folderId: els.folderSelect.value, updatedAt: Date.now() };
+                    await DB.saveFile(newFile); 
+                    await fetchDatabase(); 
+                    await openFile(newFile.id);
+                }; 
+                reader.readAsText(file); 
+                e.target.value = '';
+            };
+
+            document.getElementById('btn-export').onclick = () => {
+                const filename = els.filenameInput.value || 'export.txt'; 
+                const ext = filename.split('.').pop().toLowerCase();
+                let mimeType = 'text/plain';
+                if (ext === 'html' || ext === 'htm') mimeType = 'text/html'; 
+                else if (ext === 'js') mimeType = 'application/javascript'; 
+                else if (ext === 'css') mimeType = 'text/css'; 
+                else if (ext === 'json') mimeType = 'application/json';
+                
+                const a = document.createElement('a'); 
+                a.href = URL.createObjectURL(new Blob([els.editor.value], { type: mimeType })); 
+                a.download = filename;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            };
+            
+            // Backup / Restore
+            document.getElementById('btn-backup').onclick = async () => { 
+                const data = await DB.getAll(); 
+                const a = document.createElement('a'); 
+                a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' })); 
+                a.download = `DBP_Workspace_Backup_${new Date().toISOString().split('T')[0]}.dbp`; 
+                a.click(); 
+            };
+            
+            document.getElementById('btn-restore').onclick = () => els.fileRestore.click();
+            
+            els.fileRestore.onchange = (e) => {
+                const file = e.target.files[0]; if(!file) return; 
+                const reader = new FileReader();
+                reader.onload = async (ev) => {
+                    try {
+                        const data = JSON.parse(ev.target.result); 
+                        if(!(await Dialog.confirm("Merge this backup into your current workspace?"))) return;
+                        if(data.folders) for(let f of data.folders) await DB.saveFolder(f); 
+                        if(data.files) for(let f of data.files) await DB.saveFile(f); 
+                        await fetchDatabase(); 
+                        Dialog.alert("Workspace restored successfully!");
+                    } catch(err) { 
+                        Dialog.alert("Error: Invalid backup file."); 
+                    }
+                }; 
+                reader.readAsText(file);
+                e.target.value = '';
+            };
+
+            // View Modes (Tabs & Split)
+            document.getElementById('tab-editor').onclick = () => { 
+                document.getElementById('tab-editor').classList.add('active'); 
+                document.getElementById('tab-preview').classList.remove('active'); 
+                els.splitContainer.classList.remove('split-mode'); state.isSplit = false; 
+                document.getElementById('btn-split').classList.remove('active');
+                els.editorWrapper.style.display = 'flex'; els.editorWrapper.style.width = '100%'; 
+                els.previewWrapper.style.display = 'none'; 
+            };
+
+            document.getElementById('tab-preview').onclick = () => { 
+                document.getElementById('tab-preview').classList.add('active'); 
+                document.getElementById('tab-editor').classList.remove('active'); 
+                els.splitContainer.classList.remove('split-mode'); state.isSplit = false; 
+                document.getElementById('btn-split').classList.remove('active');
+                els.editorWrapper.style.display = 'none'; 
+                els.previewWrapper.style.display = 'flex'; els.previewWrapper.style.width = '100%'; 
+                updatePreview(); 
+            };
+
+            document.getElementById('btn-split').onclick = () => { 
+                state.isSplit = !state.isSplit; 
+                document.getElementById('btn-split').classList.toggle('active', state.isSplit); 
+                if (state.isSplit) {
+                    document.getElementById('tab-editor').classList.add('active'); 
+                    document.getElementById('tab-preview').classList.add('active'); 
+                    els.splitContainer.classList.add('split-mode'); 
+                    els.editorWrapper.style.display = 'flex';
+                    if (window.innerWidth > 768) { 
+                        els.editorWrapper.style.width = '50%'; els.previewWrapper.style.width = '50%'; 
+                    }
+                    els.previewWrapper.style.display = 'flex'; 
+                    updatePreview(); 
+                } else {
+                    document.getElementById('tab-editor').click();
+                }
+            };
+
+            document.getElementById('btn-console').onclick = () => { 
+                state.isTerminalOpen = !state.isTerminalOpen; 
+                els.terminal.style.display = state.isTerminalOpen ? 'flex' : 'none'; 
+                document.getElementById('btn-console').classList.toggle('active', state.isTerminalOpen); 
+            };
+
+            // Font Sizing
+            const applyFontSize = () => { document.documentElement.style.setProperty('--editor-font-size', `${state.fontSize}px`); updateMetrics(); };
+            document.getElementById('btn-zoom-in').onclick = () => { if (state.fontSize < 40) { state.fontSize += 2; applyFontSize(); }};
+            document.getElementById('btn-zoom-out').onclick = () => { if (state.fontSize > 8) { state.fontSize -= 2; applyFontSize(); }};
+            
+            // Search
             document.getElementById('search-input').addEventListener('input', (e) => renderSidebar(e.target.value));
             
-            let isResizing = false; document.getElementById('resizer').onmousedown = () => isResizing = true;
-            document.onmousemove = (e) => { if(isResizing && e.clientX > 200 && e.clientX < 500 && window.innerWidth > 768) document.documentElement.style.setProperty('--sidebar-width', `${e.clientX}px`); };
+            // Resizer
+            let isResizing = false; 
+            document.getElementById('resizer').onmousedown = () => isResizing = true;
+            document.onmousemove = (e) => { 
+                if (isResizing && e.clientX > 200 && e.clientX < 500 && window.innerWidth > 768) {
+                    document.documentElement.style.setProperty('--sidebar-width', `${e.clientX}px`); 
+                }
+            };
             document.onmouseup = () => isResizing = false;
             
+            // Global Hotkeys
             document.addEventListener('keydown', (e) => { 
                 if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveFile(); } 
                 if ((e.ctrlKey || e.metaKey) && e.key === 'p') { e.preventDefault(); togglePalette(); } 
@@ -1102,32 +1326,91 @@
                     else if (els.cmdPalette.style.display === 'flex') togglePalette(); 
                 }
             });
-            window.onbeforeunload = () => state.isDirty ? "Unsaved changes!" : null;
+            window.onbeforeunload = () => state.isDirty ? "You have unsaved changes!" : null;
+
+            // Command Palette Logic
+            document.getElementById('btn-palette').onclick = togglePalette;
+            els.cmdInput.addEventListener('input', updatePalette);
         }
 
-        // ==========================================
-        // 3. BOOT SEQUENCE
-        // ==========================================
-        const MASTER_PASS = "DBP_236562_DBP_9827700975_DBP";
-
-        if (localStorage.getItem('dbp_auth') === 'true') {
-            loginOverlay.style.display = 'none';
-            initFirebaseApp();
-        }
-
-        loginBtn.addEventListener('click', () => {
-            if (loginPass.value === MASTER_PASS) {
-                localStorage.setItem('dbp_auth', 'true');
-                loginOverlay.style.display = 'none';
-                initFirebaseApp();
+        function togglePalette() { 
+            els.cmdPalette.style.display = els.cmdPalette.style.display === 'flex' ? 'none' : 'flex'; 
+            if(els.cmdPalette.style.display === 'flex') { 
+                els.cmdInput.value = ''; els.cmdInput.focus(); updatePalette(); 
             } else {
-                loginError.style.display = 'block';
-                loginPass.value = '';
+                els.editor.focus(); 
             }
-        });
+        }
+        
+        function updatePalette() {
+            const q = els.cmdInput.value.toLowerCase(); els.cmdResults.innerHTML = '';
+            if (q.startsWith('>')) { 
+                const cmds = [ 
+                    { n: 'Toggle Split View', a: () => document.getElementById('btn-split').click() }, 
+                    { n: 'Toggle Terminal', a: () => document.getElementById('btn-console').click() }, 
+                    { n: 'Export Workspace Backup', a: () => document.getElementById('btn-backup').click() }, 
+                    { n: 'Create New Folder', a: createNewFolder }, 
+                    { n: 'Cycle Editor Theme', a: () => document.getElementById('btn-theme').click() }, 
+                    { n: 'Clone Current File', a: duplicateFile } 
+                ];
+                cmds.filter(c => c.n.toLowerCase().includes(q.substring(1).trim())).forEach(c => { 
+                    const d = document.createElement('div'); d.className = 'cmd-item'; 
+                    d.innerHTML = `<span>⚡ ${c.n}</span>`; 
+                    d.onclick = () => { c.a(); togglePalette(); }; 
+                    els.cmdResults.appendChild(d); 
+                });
+            } else { 
+                state.notes.filter(n => (n.filename || '').toLowerCase().includes(q)).forEach(f => { 
+                    const d = document.createElement('div'); d.className = 'cmd-item'; 
+                    d.innerHTML = `<span>📄 ${f.filename || 'Untitled'}</span>`; 
+                    d.onclick = async () => { 
+                        if(!state.isDirty || await Dialog.confirm("Discard unsaved changes?")) openFile(f.id); 
+                        togglePalette(); 
+                    }; 
+                    els.cmdResults.appendChild(d); 
+                });
+            }
+        }
 
-        loginPass.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') loginBtn.click();
+        // ==========================================
+        // 6. INITIALIZATION & AUTH
+        // ==========================================
+        async function initFirebaseApp() { 
+            DB.init(); 
+            setupEvents(); 
+            try {
+                await fetchDatabase(); 
+                if (state.notes.length > 0) await openFile(state.notes[0].id); 
+                else await createNewFile(); 
+            } catch (error) { 
+                console.error("Boot Error:", error); 
+                await createNewFile(); 
+            }
+        }
+
+        const loginOverlay = document.getElementById('login-overlay');
+        const loginBtn = document.getElementById('login-btn');
+        const loginPass = document.getElementById('login-pass');
+        const loginError = document.getElementById('login-error');
+
+        if (localStorage.getItem('dbp_auth') === 'true') { 
+            loginOverlay.style.display = 'none'; 
+            initFirebaseApp(); 
+        }
+        
+        loginBtn.addEventListener('click', () => { 
+            if (loginPass.value === MASTER_PASS) { 
+                localStorage.setItem('dbp_auth', 'true'); 
+                loginOverlay.style.display = 'none'; 
+                initFirebaseApp(); 
+            } else { 
+                loginError.style.display = 'block'; 
+                loginPass.value = ''; 
+            } 
+        });
+        
+        loginPass.addEventListener('keypress', (e) => { 
+            if (e.key === 'Enter') loginBtn.click(); 
         });
     </script>
 </body>
