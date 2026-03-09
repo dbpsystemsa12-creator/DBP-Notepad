@@ -957,10 +957,11 @@
             return '.txt';
         }
 
-        async function saveFile() {
+        async function saveFile(isAutoSave = false) {
             let fn = els.filenameInput.value.trim() || 'untitled'; 
             if (!fn.includes('.')) fn += autoDetectExtension(els.editor.value);
-            els.filenameInput.value = fn;
+            
+            if (!isAutoSave) els.filenameInput.value = fn;
             
             const file = { 
                 id: state.currentId || Date.now().toString(), 
@@ -976,14 +977,17 @@
                 UI.setDirty(false); 
                 
                 const statSave = document.getElementById('stat-save');
+                statSave.innerText = isAutoSave ? '✓ Autosaved' : '✓ Cloud Synced';
                 statSave.style.display = 'inline'; 
                 setTimeout(() => statSave.style.display = 'none', 3000);
                 
-                await fetchDatabase(); 
-                updatePreview();
+                if (!isAutoSave) {
+                    await fetchDatabase(); 
+                    updatePreview();
+                }
             } catch(err) { 
-                console.error(err);
-                Dialog.alert("Failed to save file.");
+                console.error("Save Error:", err);
+                if (!isAutoSave) Dialog.alert("Failed to save file.");
             }
         }
 
@@ -1160,7 +1164,7 @@
             // Toolbar Actions
             document.getElementById('btn-new').onclick = createNewFile; 
             document.getElementById('btn-new-folder').onclick = createNewFolder; 
-            document.getElementById('btn-save').onclick = saveFile; 
+            document.getElementById('btn-save').onclick = () => saveFile(false); 
             document.getElementById('btn-duplicate').onclick = duplicateFile;
             document.getElementById('btn-theme').onclick = () => { 
                 currentThemeIdx = (currentThemeIdx + 1) % themes.length; applyTheme(currentThemeIdx); 
@@ -1318,7 +1322,7 @@
             
             // Global Hotkeys
             document.addEventListener('keydown', (e) => { 
-                if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveFile(); } 
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveFile(false); } 
                 if ((e.ctrlKey || e.metaKey) && e.key === 'p') { e.preventDefault(); togglePalette(); } 
                 if (e.key === 'Escape') { 
                     if(document.getElementById('custom-dialog-overlay').style.display === 'flex') document.getElementById('dialog-btn-cancel').click(); 
@@ -1382,6 +1386,14 @@
                 await fetchDatabase(); 
                 if (state.notes.length > 0) await openFile(state.notes[0].id); 
                 else await createNewFile(); 
+                
+                // --- AUTOSAVE IMPLEMENTATION ---
+                setInterval(() => {
+                    if (state.isDirty) {
+                        saveFile(true);
+                    }
+                }, 60000); // 60,000 ms = 1 minute
+                
             } catch (error) { 
                 console.error("Boot Error:", error); 
                 await createNewFile(); 
