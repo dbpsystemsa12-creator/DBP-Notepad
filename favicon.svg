@@ -1,40 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="120" fill="#0A0A0A"/>
+  
+  <path d="M160 372 V140 H210 L310 322 V140 H360 V372 H310 L210 190 V372 H160 Z" fill="url(#paint0_linear)"/>
+  
   <defs>
-    <linearGradient id="paperGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#27272A"/>
-      <stop offset="100%" stop-color="#09090B"/>
+    <linearGradient id="paint0_linear" x1="160" y1="140" x2="360" y2="372" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#a855f7"/>
+      <stop offset="1" stop-color="#6366f1"/>
     </linearGradient>
-
-    <linearGradient id="neonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#38BDF8"/>
-      <stop offset="100%" stop-color="#6366F1"/>
-    </linearGradient>
-
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.5"/>
-    </filter>
-    
-    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#38BDF8" flood-opacity="0.3"/>
-    </filter>
   </defs>
-
-  <path d="M 64 96 A 32 32 0 0 1 96 64 H 336 L 448 176 V 416 A 32 32 0 0 1 416 448 H 96 A 32 32 0 0 1 64 416 Z" 
-        fill="url(#paperGrad)" 
-        stroke="#FFFFFF" 
-        stroke-width="12" 
-        stroke-opacity="0.1"
-        filter="url(#shadow)"/>
-
-  <path d="M 336 64 V 144 A 32 32 0 0 0 368 176 H 448 Z" 
-        fill="url(#neonGrad)" 
-        filter="url(#shadow)"/>
-
-  <path d="M 160 352 V 160 L 352 352 V 160" 
-        fill="none" 
-        stroke="url(#neonGrad)" 
-        stroke-width="56" 
-        stroke-linecap="round" 
-        stroke-linejoin="round"
-        filter="url(#neonGlow)"/>
 </svg>
