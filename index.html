@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>DBP | Secure Workspace</title>
-   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23050505'/><path d='M25 25 h20 c15 0 25 10 25 25 s-10 25 -25 25 h-20 z M45 40 h-5 v20 h5 c8 0 10-4 10-10 s-2-10 -10-10 z' fill='%2300d2ff' opacity='0.8'/><circle cx='70' cy='50' r='6' fill='%2300d2ff'/><path d='M25 25 h-5 v50 h5' fill='%23fff' opacity='0.2'/></svg>">
     <style>
         /* =========================================
            ROOT VARIABLES & CORE SETTINGS
@@ -12,34 +12,29 @@
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
 
         :root {
-            /* Restored & Enhanced Radial Gradients */
             --bg-master: radial-gradient(circle at center, #3a3232 0%, #050505 100%);
             --accent-main: #00d2ff;
             --accent-glow: rgba(0, 210, 255, 0.3);
             
-            /* Enhanced Glassmorphism */
             --glass-bg: rgba(20, 20, 25, 0.45); 
             --glass-border: rgba(255, 255, 255, 0.08);
             --glass-highlight: rgba(255, 255, 255, 0.15); 
             --glass-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
             --glass-blur: blur(24px);
             
-            /* Typography & Colors */
             --text-primary: #f8fafc;
             --text-secondary: #cbd5e1;
             --text-muted: #64748b;
             --bg-darker: rgba(0, 0, 0, 0.3);
             --bg-lighter: rgba(255, 255, 255, 0.06);
             
-            /* Status Colors */
             --danger: #ef4444;
             --success: #10b981;
             --warning: #f59e0b;
             
-            /* Layout */
             --font-mono: 'Fira Code', 'JetBrains Mono', Consolas, monospace;
             --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-            --sidebar-width: 300px;
+            --sidebar-width: 320px;
             --editor-font-size: 14px;
             --radius-lg: 16px;
             --radius-md: 8px;
@@ -62,7 +57,6 @@
             transition: background 0.8s ease;
         }
 
-        /* Scrollbars */
         ::-webkit-scrollbar { width: 6px; height: 6px; } 
         ::-webkit-scrollbar-track { background: transparent; } 
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
@@ -87,15 +81,9 @@
             z-index: 9999; display: flex; align-items: center; justify-content: center;
         }
         
-        .login-box {
-            padding: 48px 40px; 
-            text-align: center; width: 90%; max-width: 420px;
-            background: linear-gradient(145deg, rgba(30,30,38,0.6), rgba(15,15,20,0.8));
-        }
-        
+        .login-box { padding: 48px 40px; text-align: center; width: 90%; max-width: 420px; background: linear-gradient(145deg, rgba(30,30,38,0.6), rgba(15,15,20,0.8)); }
         .login-box h1 { margin-bottom: 32px; font-size: 1.75rem; font-weight: 700; letter-spacing: 0.5px; }
         .login-box h1 span { color: var(--accent-main); text-shadow: 0 0 15px var(--accent-glow); }
-        
         .login-input {
             width: 100%; padding: 14px 16px; margin-bottom: 24px; 
             border-radius: var(--radius-md); background: rgba(0,0,0,0.4); 
@@ -103,164 +91,97 @@
             outline: none; text-align: center; font-family: var(--font-mono);
             font-size: 1rem; letter-spacing: 3px; transition: all 0.3s;
         }
-        
         .login-input:focus { border-color: var(--accent-main); box-shadow: 0 0 15px var(--accent-glow); }
-        
         .login-btn {
             width: 100%; padding: 14px; border: none; border-radius: var(--radius-md);
             background: var(--accent-main); color: #000; font-weight: 600; cursor: pointer;
             transition: all 0.2s ease; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;
         }
-        
         .login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px var(--accent-glow); filter: brightness(1.1); }
         #login-error { color: var(--danger); margin-top: 16px; font-size: 0.9rem; display: none; font-weight: 500; }
 
         /* =========================================
-           SIDEBAR
+           SIDEBAR & RECURSIVE FILE EXPLORER
            ========================================= */
         #sidebar-container { 
             display: flex; height: 100%; z-index: 20;
             transition: margin-left 0.5s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s ease; 
         }
-        
-        #sidebar-container.hidden { 
-            margin-left: calc(-1 * var(--sidebar-width) - 60px);
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        #sidebar { 
-            width: var(--sidebar-width); 
-            min-width: 260px; max-width: 600px;
-            display: flex; flex-direction: column; height: 100%;
-        }
+        #sidebar-container.hidden { margin-left: calc(-1 * var(--sidebar-width) - 60px); opacity: 0; pointer-events: none; }
+        #sidebar { width: var(--sidebar-width); min-width: 280px; max-width: 600px; display: flex; flex-direction: column; height: 100%; }
         
         .resizer { 
             width: 12px; cursor: col-resize; z-index: 100; position: relative;
             margin-left: 8px; flex-shrink: 0; transition: opacity 0.2s;
         }
         .resizer::after {
-            content: ''; position: absolute; left: 4px; top: 50%;
-            transform: translateY(-50%); height: 40px; width: 4px;
-            background: rgba(255,255,255,0.1); border-radius: 4px;
-            transition: all 0.2s ease;
+            content: ''; position: absolute; left: 4px; top: 50%; transform: translateY(-50%); 
+            height: 40px; width: 4px; background: rgba(255,255,255,0.1); border-radius: 4px; transition: all 0.2s ease;
         }
-        .resizer:hover::after, .resizer.active::after { 
-            background: var(--accent-main); 
-            box-shadow: 0 0 12px var(--accent-glow); 
-            height: 60px;
-        }
+        .resizer:hover::after, .resizer.active::after { background: var(--accent-main); box-shadow: 0 0 12px var(--accent-glow); height: 60px; }
 
         .sidebar-header { padding: 24px 20px 20px; border-bottom: 1px solid var(--glass-border); background: var(--bg-darker); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
-        
         .brand { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .brand h1 { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); }
         .brand span { color: var(--accent-main); }
-        
         .workspace-stats {
             font-size: 0.75rem; color: var(--text-secondary); font-family: var(--font-mono);
             margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;
-            background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: var(--radius-sm);
-            border: 1px solid rgba(255,255,255,0.03);
+            background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.03);
         }
 
-        .search-box { 
-            width: 100%; padding: 10px 14px; background: rgba(0,0,0,0.4); 
-            border: 1px solid var(--glass-border); border-radius: var(--radius-md); 
-            color: var(--text-primary); font-size: 0.85rem; outline: none; transition: 0.2s; 
-        }
+        .search-box { width: 100%; padding: 10px 14px; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); border-radius: var(--radius-md); color: var(--text-primary); font-size: 0.85rem; outline: none; transition: 0.2s; }
         .search-box:focus { border-color: var(--accent-main); background: rgba(0,0,0,0.6); }
 
         .sidebar-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+        .sidebar-actions-bottom { display: flex; gap: 8px; margin-top: 8px; }
         .sidebar-btn { 
             background: var(--bg-lighter); border: 1px solid var(--glass-border); 
             color: var(--text-secondary); padding: 8px; border-radius: var(--radius-sm); 
-            cursor: pointer; font-size: 0.8rem; font-weight: 500; transition: 0.2s;
+            cursor: pointer; font-size: 0.8rem; font-weight: 500; transition: 0.2s; flex: 1; text-align: center;
         }
         .sidebar-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
         .sidebar-btn.primary { color: var(--accent-main); border-color: rgba(0,210,255,0.2); background: rgba(0,210,255,0.05); }
         .sidebar-btn.primary:hover { background: var(--accent-main); color: #000; box-shadow: 0 0 15px var(--accent-glow); }
+        .sidebar-btn.warning { color: var(--warning); border-color: rgba(245, 158, 11, 0.2); background: rgba(245, 158, 11, 0.05); }
+        .sidebar-btn.warning:hover { background: var(--warning); color: #000; box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
 
-        /* =========================================
-           FILE EXPLORER (SMOOTH GLIDING FOLDER HOVER)
-           ========================================= */
+        /* Nested Folder Structure CSS */
         #notes-list { flex-grow: 1; overflow-y: auto; padding: 12px; }
-        
-        .folder-group { margin-bottom: 8px; }
-        
+        .folder-group { margin-bottom: 2px; }
         .folder-header {
-            display: flex; align-items: center; padding: 8px 10px;
-            cursor: pointer; border-radius: var(--radius-sm); color: var(--text-secondary);
-            font-size: 0.85rem; font-weight: 600; 
-            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-            border: 1px solid transparent; 
+            display: flex; align-items: center; padding: 6px 8px; cursor: pointer; border-radius: var(--radius-sm); 
+            color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; transition: all 0.2s; border: 1px solid transparent; 
         }
-        
-        .folder-header:hover { 
-            background: var(--bg-lighter); 
-            color: var(--text-primary); 
-            transform: translateX(4px); /* Satisfying nudge to the right */
-        }
-        
+        .folder-header:hover { background: var(--bg-lighter); color: var(--text-primary); transform: translateX(2px); }
         .folder-icon { font-size: 0.8rem; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); flex-shrink: 0; margin-right: 8px; }
         .folder-name { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 10px; }
-
-        /* The magic container that handles the vertical slot animation */
-        .folder-right { 
-            position: relative; width: 75px; height: 24px; 
-            display: flex; align-items: center; justify-content: flex-end;
-            flex-shrink: 0; overflow: hidden;
-        }
         
-        .folder-meta { 
-            position: absolute; right: 4px;
-            font-size: 0.7rem; color: var(--text-muted); font-weight: 400; 
-            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-            transform: translateY(0); opacity: 1; pointer-events: none;
-        }
-
-        .folder-actions { 
-            position: absolute; right: 0;
-            display: flex; gap: 4px; 
-            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-            transform: translateY(20px); opacity: 0; pointer-events: none;
-        }
+        .folder-right { position: relative; width: 100px; height: 24px; display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0; overflow: hidden; }
+        .folder-meta { position: absolute; right: 4px; font-size: 0.7rem; color: var(--text-muted); font-weight: 400; transition: all 0.3s; transform: translateY(0); opacity: 1; pointer-events: none; }
+        .folder-actions { position: absolute; right: 0; display: flex; gap: 2px; transition: all 0.3s; transform: translateY(20px); opacity: 0; pointer-events: none; }
         
-        /* The Glide Trigger */
         .folder-header:hover .folder-meta { transform: translateY(-20px); opacity: 0; }
         .folder-header:hover .folder-actions { transform: translateY(0); opacity: 1; pointer-events: auto; }
-        
-        .folder-group.collapsed .folder-contents { display: none; }
-        .folder-group.collapsed .folder-icon { transform: rotate(-90deg); }
+        .folder-group.collapsed > .folder-contents { display: none; }
+        .folder-group.collapsed > .folder-header .folder-icon { transform: rotate(-90deg); }
 
-        .folder-action-btn { 
-            background: none; border: none; color: var(--text-muted); cursor: pointer; 
-            padding: 2px; border-radius: var(--radius-sm); font-size: 0.95rem; 
-            transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
-        }
+        .folder-action-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px; border-radius: var(--radius-sm); font-size: 0.85rem; transition: all 0.2s; }
         .folder-action-btn:hover { color: var(--accent-main); background: rgba(255,255,255,0.1); transform: scale(1.15); }
         .folder-action-btn.del:hover { color: var(--danger); background: rgba(239, 68, 68, 0.1); }
 
-        .folder-contents { padding-left: 14px; margin-top: 4px; border-left: 1px solid var(--glass-border); margin-left: 14px; }
+        .folder-contents { padding-left: 12px; margin-top: 2px; border-left: 1px solid var(--glass-border); margin-left: 8px; }
 
-        .note-card { 
-            border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 4px; cursor: pointer; 
-            display: flex; gap: 12px; align-items: center; transition: all 0.2s ease; border: 1px solid transparent; 
-        }
+        .note-card { border-radius: var(--radius-sm); padding: 6px 10px; margin-bottom: 2px; cursor: pointer; display: flex; gap: 10px; align-items: center; transition: all 0.2s; border: 1px solid transparent; }
         .note-card:hover { background: var(--bg-lighter); transform: translateX(2px); }
-        .note-card.active { 
-            background: linear-gradient(90deg, rgba(0, 210, 255, 0.1) 0%, transparent 100%); 
-            border-left: 3px solid var(--accent-main); 
-        }
-        
+        .note-card.active { background: linear-gradient(90deg, rgba(0, 210, 255, 0.1) 0%, transparent 100%); border-left: 3px solid var(--accent-main); }
         .note-icon { font-size: 1.1rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
         .note-info { overflow: hidden; flex-grow: 1; }
         .note-info-top { display: flex; justify-content: space-between; align-items: center; }
         .note-info h3 { font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .note-card.active .note-info h3 { color: var(--text-primary); font-weight: 600; }
         .note-size { font-size: 0.65rem; color: var(--text-muted); font-family: var(--font-mono); }
-        
-        /* File Colors */
+
         .ext-html { color: #e34c26; } .ext-css { color: #264de4; } .ext-js { color: #f7df1e; } 
         .ext-json { color: #859900; } .ext-md { color: #a78bfa; } .ext-ino { color: #00979d; } .ext-py { color: #3776ab; }
 
@@ -271,31 +192,18 @@
         #workspace { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; height: 100%; }
 
         .tabs { display: flex; border-bottom: 1px solid var(--glass-border); padding: 12px 16px 0; background: var(--bg-darker); border-radius: var(--radius-lg) var(--radius-lg) 0 0;}
-        .tab { 
-            padding: 10px 24px; color: var(--text-muted); cursor: pointer; border-radius: var(--radius-md) var(--radius-md) 0 0; 
-            font-size: 0.85rem; font-weight: 500; margin-right: 6px; border-bottom: 2px solid transparent; transition: 0.2s;
-        }
+        .tab { padding: 10px 24px; color: var(--text-muted); cursor: pointer; border-radius: var(--radius-md) var(--radius-md) 0 0; font-size: 0.85rem; font-weight: 500; margin-right: 6px; border-bottom: 2px solid transparent; transition: 0.2s; }
         .tab:hover { color: var(--text-secondary); background: var(--bg-lighter); }
         .tab.active { color: var(--accent-main); background: rgba(0, 210, 255, 0.05); border-bottom-color: var(--accent-main); }
-        
         .toggle-sidebar { margin-left: auto; background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 0 12px; font-size: 1.1rem; transition: 0.2s; }
         .toggle-sidebar:hover { color: var(--text-primary); transform: scale(1.1); }
 
         .toolbar { padding: 12px 16px; border-bottom: 1px solid var(--glass-border); display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: rgba(0,0,0,0.15); }
-        
         .filename-wrapper { position: relative; display: flex; align-items: center; }
-        .filename-input { 
-            background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); color: var(--accent-main); 
-            padding: 8px 14px; border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 0.85rem; 
-            width: 200px; outline: none; font-weight: 600; transition: 0.2s;
-        }
+        .filename-input { background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); color: var(--accent-main); padding: 8px 14px; border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 0.85rem; width: 200px; outline: none; font-weight: 600; transition: 0.2s; }
         .filename-input:focus { border-color: var(--accent-main); background: rgba(0,0,0,0.6); box-shadow: 0 0 0 2px rgba(0, 210, 255, 0.1); }
         
-        .folder-select {
-            appearance: none; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); color: var(--text-secondary);
-            padding: 8px 32px 8px 14px; border-radius: var(--radius-md); font-size: 0.85rem; font-weight: 500;
-            outline: none; cursor: pointer; max-width: 160px; transition: 0.2s;
-        }
+        .folder-select { appearance: none; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); color: var(--text-secondary); padding: 8px 32px 8px 14px; border-radius: var(--radius-md); font-size: 0.85rem; font-weight: 500; outline: none; cursor: pointer; max-width: 200px; transition: 0.2s; text-overflow: ellipsis; white-space: nowrap;}
         .folder-select:hover { border-color: rgba(255,255,255,0.2); color: var(--text-primary); }
         .folder-select:focus { border-color: var(--accent-main); }
         .folder-select option { background: #1a1a24; color: #fff; padding: 10px; }
@@ -303,23 +211,13 @@
         .unsaved-dot { height: 8px; width: 8px; background: var(--warning); border-radius: 50%; margin-left: -20px; display: none; box-shadow: 0 0 8px var(--warning); }
         .divider { width: 1px; height: 24px; background: var(--glass-border); margin: 0 4px; }
         
-        .icon-btn { 
-            background: transparent; color: var(--text-muted); border: 1px solid transparent; border-radius: var(--radius-sm); 
-            height: 34px; width: 34px; display: flex; align-items: center; justify-content: center; 
-            cursor: pointer; font-size: 1.1rem; transition: all 0.2s ease; position: relative; 
-        }
+        .icon-btn { background: transparent; color: var(--text-muted); border: 1px solid transparent; border-radius: var(--radius-sm); height: 34px; width: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.1rem; transition: all 0.2s ease; position: relative; }
         .icon-btn:hover { background: var(--bg-lighter); color: var(--text-primary); }
         .icon-btn.danger:hover { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
         .icon-btn.primary { color: var(--accent-main); background: rgba(0, 210, 255, 0.1); }
         .icon-btn.primary:hover { background: rgba(0, 210, 255, 0.2); box-shadow: 0 0 15px rgba(0, 210, 255, 0.2); }
         .icon-btn.active { background: rgba(0, 210, 255, 0.15); color: var(--accent-main); }
-        
-        .icon-btn::after { 
-            content: attr(data-tooltip); position: absolute; bottom: -36px; left: 50%; 
-            transform: translateX(-50%) translateY(4px); background: #000; color: #f8fafc; font-size: 0.75rem; font-weight: 500;
-            padding: 6px 10px; border-radius: var(--radius-sm); white-space: nowrap; opacity: 0; pointer-events: none; 
-            transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(255,255,255,0.1); z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        }
+        .icon-btn::after { content: attr(data-tooltip); position: absolute; bottom: -36px; left: 50%; transform: translateX(-50%) translateY(4px); background: #000; color: #f8fafc; font-size: 0.75rem; font-weight: 500; padding: 6px 10px; border-radius: var(--radius-sm); white-space: nowrap; opacity: 0; pointer-events: none; transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(255,255,255,0.1); z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         .icon-btn:hover::after { opacity: 1; transform: translateX(-50%) translateY(0); }
 
         /* =========================================
@@ -327,44 +225,25 @@
            ========================================= */
         .workspace-core { flex-grow: 1; display: flex; flex-direction: column; background: rgba(0,0,0,0.2); overflow: hidden; }
         .split-container { flex-grow: 1; display: flex; overflow: hidden; }
-        
         .editor-wrapper, .preview-wrapper { display: flex; flex-grow: 1; width: 100%; position: relative; }
         .preview-wrapper { display: none; background: #fff; }
-        
         .split-mode .editor-wrapper { width: 50%; border-right: 1px solid var(--glass-border); }
         .split-mode .preview-wrapper { width: 50%; display: flex; }
 
-        .line-numbers { 
-            width: 50px; min-width: 50px; background: rgba(0,0,0,0.2); border-right: 1px solid var(--glass-border); 
-            padding: 24px 0; text-align: right; color: var(--text-muted); font-family: var(--font-mono); 
-            font-size: var(--editor-font-size); line-height: 1.6; user-select: none; overflow: hidden; 
-        }
+        .line-numbers { width: 50px; min-width: 50px; background: rgba(0,0,0,0.2); border-right: 1px solid var(--glass-border); padding: 24px 0; text-align: right; color: var(--text-muted); font-family: var(--font-mono); font-size: var(--editor-font-size); line-height: 1.6; user-select: none; overflow: hidden; }
         .line-numbers span { display: block; padding-right: 12px; transition: color 0.1s; }
         .line-numbers span.active-line { color: var(--text-primary); background: rgba(255,255,255,0.03); font-weight: bold; border-right: 2px solid var(--text-primary); }
 
-        #editor { 
-            flex-grow: 1; padding: 24px; font-size: var(--editor-font-size); line-height: 1.6; 
-            color: #e2e8f0; background: transparent; border: none; outline: none; resize: none; 
-            overflow-y: auto; font-family: var(--font-mono); white-space: pre; tab-size: 4; 
-        }
+        #editor { flex-grow: 1; padding: 24px; font-size: var(--editor-font-size); line-height: 1.6; color: #e2e8f0; background: transparent; border: none; outline: none; resize: none; overflow-y: auto; font-family: var(--font-mono); white-space: pre; tab-size: 4; }
         #editor::placeholder { color: rgba(255,255,255,0.2); }
-        
         #preview-frame { width: 100%; height: 100%; border: none; background: #fff; }
-        #preview-text { 
-            display: none; width: 100%; height: 100%; padding: 30px; overflow-y: auto; 
-            background: #0d1117; color: #c9d1d9; font-size: var(--editor-font-size); 
-            font-family: var(--font-mono); line-height: 1.6; 
-        }
+        #preview-text { display: none; width: 100%; height: 100%; padding: 30px; overflow-y: auto; background: #0d1117; color: #c9d1d9; font-size: var(--editor-font-size); font-family: var(--font-mono); line-height: 1.6; }
 
         /* =========================================
            TERMINAL / CONSOLE
            ========================================= */
         #terminal-panel { height: 220px; border-top: 1px solid var(--glass-border); display: none; flex-direction: column; background: rgba(5,5,8,0.7); backdrop-filter: blur(10px); }
-        .terminal-header { 
-            padding: 10px 16px; background: rgba(0,0,0,0.4); border-bottom: 1px solid var(--glass-border); 
-            display: flex; justify-content: space-between; align-items: center; 
-            font-size: 0.75rem; font-weight: 600; font-family: var(--font-sans); color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;
-        }
+        .terminal-header { padding: 10px 16px; background: rgba(0,0,0,0.4); border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; font-weight: 600; font-family: var(--font-sans); color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
         .terminal-output { flex-grow: 1; padding: 12px 16px; overflow-y: auto; font-family: var(--font-mono); font-size: calc(var(--editor-font-size) - 1px); line-height: 1.5; }
         .log-line { border-bottom: 1px solid rgba(255,255,255,0.03); padding: 6px 0; display: flex; gap: 10px; }
         .log-time { color: var(--text-muted); font-size: 0.8em; }
@@ -377,28 +256,15 @@
         /* =========================================
            STATUS BAR
            ========================================= */
-        .status-bar { 
-            border-top: 1px solid var(--glass-border); padding: 6px 16px; display: flex; 
-            justify-content: space-between; align-items: center; font-size: 0.75rem; 
-            color: var(--text-muted); font-family: var(--font-mono); background: rgba(0,0,0,0.4); 
-            border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-        }
+        .status-bar { border-top: 1px solid var(--glass-border); padding: 6px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); background: rgba(0,0,0,0.4); border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
         .status-left span { margin-right: 16px; } 
         .status-right span { margin-left: 16px; }
-        .dbp-tag { 
-            color: #000; font-weight: 700; background: var(--accent-main); padding: 2px 12px; 
-            border-radius: 12px; font-family: var(--font-sans); letter-spacing: 0.5px; box-shadow: 0 0 10px rgba(0,210,255,0.2);
-        }
+        .dbp-tag { color: #000; font-weight: 700; background: var(--accent-main); padding: 2px 12px; border-radius: 12px; font-family: var(--font-sans); letter-spacing: 0.5px; box-shadow: 0 0 10px rgba(0,210,255,0.2); }
 
         /* =========================================
-           MODALS & COMMAND PALETTE
+           MODALS, DIALOGS & FILE MANAGER
            ========================================= */
-        .cmd-palette { 
-            display: none; position: fixed; top: 15%; left: 50%; transform: translateX(-50%); 
-            width: 500px; z-index: 200; flex-direction: column; overflow: hidden;
-            background: rgba(20, 20, 25, 0.75); border: 1px solid var(--glass-border); border-radius: var(--radius-lg);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5); backdrop-filter: var(--glass-blur);
-        }
+        .cmd-palette { display: none; position: fixed; top: 15%; left: 50%; transform: translateX(-50%); width: 500px; z-index: 200; flex-direction: column; overflow: hidden; background: rgba(20, 20, 25, 0.75); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); box-shadow: 0 20px 50px rgba(0,0,0,0.5); backdrop-filter: var(--glass-blur); }
         .cmd-input { width: 100%; padding: 20px; background: transparent; border: none; border-bottom: 1px solid var(--glass-border); color: #fff; outline: none; font-size: 1.1rem; font-family: var(--font-sans); }
         .cmd-results { max-height: 350px; overflow-y: auto; padding: 8px; } 
         .cmd-item { padding: 14px 18px; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; border-radius: var(--radius-sm); transition: 0.15s; margin-bottom: 2px;} 
@@ -415,18 +281,39 @@
         .confirm-btn { background: var(--accent-main); color: #000; }
         .confirm-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,210,255,0.3); }
 
+        /* File Select Dropdown Dialog */
+        .select-list { max-height: 200px; overflow-y: auto; text-align: left; background: rgba(0,0,0,0.3); border-radius: var(--radius-md); border: 1px solid var(--glass-border); margin-bottom: 20px;}
+        .select-item { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; color: var(--text-secondary); transition: 0.2s; font-size: 0.9rem;}
+        .select-item:hover, .select-item.selected { background: rgba(0, 210, 255, 0.1); color: #fff; }
+
+        /* File Manager Overlay */
+        #fm-overlay { z-index: 500; }
+        .fm-box { width: 80vw; max-width: 1000px; height: 80vh; display: flex; flex-direction: column; padding: 0; text-align: left;}
+        .fm-header { padding: 20px 24px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); border-radius: var(--radius-lg) var(--radius-lg) 0 0;}
+        .fm-breadcrumb { font-size: 1.1rem; color: var(--text-primary); font-weight: 600; display: flex; align-items: center; gap: 8px;}
+        .fm-crumb { cursor: pointer; transition: 0.2s; }
+        .fm-crumb:hover { color: var(--accent-main); }
+        .fm-crumb.separator { color: var(--text-muted); cursor: default; }
+        .fm-close { background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; transition: 0.2s; }
+        .fm-close:hover { color: var(--danger); }
+        .fm-body { flex-grow: 1; padding: 24px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px; align-content: start;}
+        
+        .fm-item { display: flex; flex-direction: column; align-items: center; padding: 16px; border-radius: var(--radius-md); cursor: pointer; transition: 0.2s; border: 1px solid transparent; text-align: center; position: relative;}
+        .fm-item:hover { background: var(--bg-lighter); border-color: var(--glass-border); transform: translateY(-3px);}
+        .fm-icon { font-size: 3rem; margin-bottom: 12px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));}
+        .fm-name { font-size: 0.85rem; color: var(--text-primary); word-break: break-all; font-weight: 500;}
+        .fm-item-actions { position: absolute; top: 5px; right: 5px; display: flex; gap: 5px; opacity: 0; transition: 0.2s;}
+        .fm-item:hover .fm-item-actions { opacity: 1; }
+        .fm-btn { background: rgba(0,0,0,0.6); border: none; color: #fff; border-radius: 4px; padding: 4px; cursor: pointer; font-size: 0.8rem;}
+        .fm-btn:hover { background: var(--accent-main); color: #000;}
+
         /* =========================================
            MOBILE OPTIMIZATIONS
            ========================================= */
         @media (max-width: 768px) {
             body { padding: 0; gap: 0; } 
             .glass-panel { border-radius: 0; border: none; }
-            #sidebar-container { 
-                position: absolute; left: 0; top: 0; 
-                width: 100%; max-width: 320px; z-index: 50; 
-                margin-left: 0 !important; /* Disable margin anim on mobile */
-                transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease;
-            }
+            #sidebar-container { position: absolute; left: 0; top: 0; width: 100%; max-width: 320px; z-index: 50; margin-left: 0 !important; transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease; }
             #sidebar-container:not(.hidden) { box-shadow: 10px 0 40px rgba(0,0,0,0.8); }
             #sidebar-container.hidden { transform: translateX(-100%); opacity: 0; pointer-events: none; }
             #sidebar { border-right: 1px solid var(--glass-border); width: 100%; }
@@ -441,6 +328,7 @@
             .cmd-palette { width: 95%; top: 5%; }
             .status-bar { border-radius: 0; }
             .status-bar .status-left span:nth-child(2), .status-bar .status-left span:nth-child(3) { display: none; }
+            .fm-box { width: 95vw; height: 90vh; }
         }
     </style>
 </head>
@@ -477,6 +365,28 @@
         </div>
     </div>
 
+    <div id="select-dialog-overlay" class="dialog-overlay">
+        <div class="dialog-box glass-panel">
+            <h3 id="select-title">Move To...</h3>
+            <div id="select-list" class="select-list"></div>
+            <div class="dialog-actions">
+                <button id="select-btn-cancel" class="dialog-btn cancel-btn">Cancel</button>
+                <button id="select-btn-confirm" class="dialog-btn confirm-btn">Move</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="fm-overlay" class="dialog-overlay">
+        <div class="dialog-box glass-panel fm-box">
+            <div class="fm-header">
+                <div id="fm-breadcrumb" class="fm-breadcrumb"></div>
+                <button class="fm-close" onclick="document.getElementById('fm-overlay').style.display='none'">×</button>
+            </div>
+            <div id="fm-body" class="fm-body">
+                </div>
+        </div>
+    </div>
+
     <div id="cmd-palette" class="cmd-palette glass-panel">
         <input type="text" id="cmd-input" class="cmd-input" placeholder="Search files or type '>' for commands...">
         <div id="cmd-results" class="cmd-results"></div>
@@ -498,7 +408,10 @@
                 <input type="text" id="search-input" class="search-box" placeholder="Search explorer...">
                 <div class="sidebar-actions">
                     <button class="sidebar-btn primary" id="btn-new">📄 File</button>
-                    <button class="sidebar-btn" id="btn-new-folder" style="color: var(--warning); border-color: rgba(245, 158, 11, 0.2); background: rgba(245, 158, 11, 0.05);">📁 Folder</button>
+                    <button class="sidebar-btn warning" id="btn-new-folder">📁 Folder</button>
+                </div>
+                <div class="sidebar-actions-bottom">
+                    <button class="sidebar-btn" id="btn-manage" title="Open File Manager" style="color: var(--accent-main); border-color: rgba(0,210,255,0.2);">🗄️ Manage</button>
                     <button class="sidebar-btn" id="btn-backup" title="Backup Entire Workspace">📥 Export</button>
                     <button class="sidebar-btn" id="btn-restore" title="Restore Workspace">📤 Import</button>
                 </div>
@@ -619,8 +532,8 @@
         // 1. STATE & DOM ELEMENTS
         // ==========================================
         const state = { 
-            db: null, currentId: null, notes: [], folders: [], 
-            expandedFolders: new Set(['main_workspace']), 
+            db: null, currentId: null, notes: [], folders: [], folderMap: {}, rootTree: {},
+            expandedFolders: new Set(['main_workspace']), currentFmDir: 'main_workspace',
             fontSize: 14, isDirty: false, isWrapped: false, isSplit: false, isTerminalOpen: false 
         };
 
@@ -712,6 +625,34 @@
                         if(e.key === 'Escape') document.getElementById('prompt-btn-cancel').click(); 
                     };
                 });
+            },
+            select: (title, optionsArray) => {
+                // optionsArray: [{id: 'f_123', name: '/ Root / Folder'}, ...]
+                return new Promise((resolve) => {
+                    const overlay = document.getElementById('select-dialog-overlay');
+                    const list = document.getElementById('select-list');
+                    document.getElementById('select-title').innerText = title;
+                    
+                    list.innerHTML = '';
+                    let selectedId = null;
+
+                    optionsArray.forEach(opt => {
+                        const item = document.createElement('div');
+                        item.className = 'select-item';
+                        item.innerText = opt.name;
+                        item.onclick = () => {
+                            Array.from(list.children).forEach(c => c.classList.remove('selected'));
+                            item.classList.add('selected');
+                            selectedId = opt.id;
+                        };
+                        list.appendChild(item);
+                    });
+
+                    overlay.style.display = 'flex';
+
+                    document.getElementById('select-btn-confirm').onclick = () => { overlay.style.display = 'none'; resolve(selectedId); };
+                    document.getElementById('select-btn-cancel').onclick = () => { overlay.style.display = 'none'; resolve(null); };
+                });
             }
         };
 
@@ -758,104 +699,165 @@
         };
 
         // ==========================================
-        // 4. CORE APPLICATION LOGIC
+        // 4. CORE APPLICATION LOGIC (TREE ENGINE)
         // ==========================================
+        function buildDataTree() {
+            const root = { id: 'main_workspace', name: 'Root Workspace', files: [], folders: [], _size: 0 };
+            const map = { 'main_workspace': root };
+            
+            // Initialize Folders
+            state.folders.forEach(f => {
+                map[f.id] = { ...f, files: [], folders: [], _size: 0 };
+            });
+
+            // Connect Folders
+            state.folders.forEach(f => {
+                // Backward compatibility: If no parentId, map to main_workspace
+                const pId = f.parentId && map[f.parentId] ? f.parentId : 'main_workspace';
+                map[pId].folders.push(map[f.id]);
+            });
+
+            // Connect Files
+            state.notes.forEach(f => {
+                const fId = f.folderId && map[f.folderId] ? f.folderId : 'main_workspace';
+                const size = new Blob([f.content || '']).size;
+                f._computedSize = size;
+                map[fId].files.push(f);
+                
+                // Bubble up size
+                let curr = map[fId];
+                while (curr) {
+                    curr._size += size;
+                    curr = curr.parentId && map[curr.parentId] ? map[curr.parentId] : (curr.id !== 'main_workspace' ? map['main_workspace'] : null);
+                }
+            });
+
+            state.folderMap = map;
+            state.rootTree = root;
+        }
+
+        function getFolderPath(folderId) {
+            if (folderId === 'main_workspace') return '/ Root';
+            const f = state.folderMap[folderId];
+            if (!f) return '/ Root';
+            const parentPath = f.parentId && f.parentId !== 'main_workspace' ? getFolderPath(f.parentId) : '/ Root';
+            return parentPath + ' / ' + f.name;
+        }
+
+        function getAllPathsForSelect(excludeId = null) {
+            const paths = [];
+            const traverse = (node) => {
+                if (node.id === excludeId) return; // Prevent moving a folder into itself
+                paths.push({ id: node.id, name: getFolderPath(node.id) });
+                node.folders.forEach(traverse);
+            };
+            traverse(state.rootTree);
+            return paths;
+        }
+
         async function fetchDatabase() {
             const data = await DB.getAll(); 
             state.notes = data.files; 
             state.folders = data.folders;
             
-            let totalWorkspaceBytes = 0;
-            state.notes.forEach(f => {
-                const size = new Blob([f.content || '']).size;
-                f._computedSize = size;
-                totalWorkspaceBytes += size;
-            });
+            buildDataTree();
             
-            els.workspaceTotal.innerText = UI.formatBytes(totalWorkspaceBytes);
+            els.workspaceTotal.innerText = UI.formatBytes(state.rootTree._size);
             updateFolderSelects(); 
             renderSidebar(document.getElementById('search-input').value);
+            renderFileManager();
         }
 
         function updateFolderSelects() {
             const currentVal = els.folderSelect.value;
-            els.folderSelect.innerHTML = '<option value="main_workspace">/ Root Workspace</option>';
+            els.folderSelect.innerHTML = '';
             
-            state.folders.forEach(f => {
+            const paths = getAllPathsForSelect();
+            paths.forEach(p => {
                 const opt = document.createElement('option');
-                opt.value = f.id; 
-                opt.innerText = `📁 ${f.name}`;
+                opt.value = p.id; 
+                opt.innerText = p.id === 'main_workspace' ? p.name : `📁 ${p.name}`;
                 els.folderSelect.appendChild(opt);
             });
             
             if (Array.from(els.folderSelect.options).some(o => o.value === currentVal)) {
                 els.folderSelect.value = currentVal;
+            } else {
+                els.folderSelect.value = 'main_workspace';
             }
         }
 
-        // --- Sidebar Rendering ---
+        // --- Recursive Sidebar Rendering ---
         function renderSidebar(filter = '') {
             els.notesList.innerHTML = '';
             const searchLower = filter.toLowerCase();
-            const visibleFiles = state.notes.filter(n => (n.filename || '').toLowerCase().includes(searchLower));
-            
-            const filesByFolder = { 'main_workspace': [] };
-            state.folders.forEach(f => filesByFolder[f.id] = []);
-            
-            visibleFiles.forEach(f => {
-                const fId = f.folderId && filesByFolder[f.folderId] ? f.folderId : 'main_workspace';
-                filesByFolder[fId].push(f);
-            });
 
-            state.folders.forEach(folder => {
-                if (filter && filesByFolder[folder.id].length === 0) return;
+            // Render function for recursion
+            function renderNode(node, isRoot = false) {
+                let html = '';
+                const isCollapsed = state.expandedFolders.has(node.id) ? '' : 'collapsed';
                 
-                const isCollapsed = state.expandedFolders.has(folder.id) ? '' : 'collapsed';
-                const isEmpty = filesByFolder[folder.id].length === 0;
+                // Filter logic
+                const matchesSearch = node.files.some(f => (f.filename || '').toLowerCase().includes(searchLower)) || 
+                                      node.folders.some(f => f.name.toLowerCase().includes(searchLower));
                 
-                let folderBytes = 0;
-                filesByFolder[folder.id].forEach(f => folderBytes += (f._computedSize || 0));
-                
-                const groupDiv = document.createElement('div');
-                groupDiv.className = `folder-group ${isCollapsed}`;
-                groupDiv.id = `folder-group-${folder.id}`;
-                
-                let html = `
-                    <div class="folder-header" onclick="toggleFolder('${folder.id}')">
-                        <span class="folder-icon">▼</span>
-                        <span class="folder-name">📁 ${folder.name}</span>
-                        <div class="folder-right">
-                            <span class="folder-meta">${filesByFolder[folder.id].length} items</span>
-                            <div class="folder-actions">
-                                <button class="folder-action-btn" title="New File" onclick="createFileInFolder(event, '${folder.id}')">➕</button>
-                                <button class="folder-action-btn" title="Rename" onclick="renameFolder(event, '${folder.id}', '${folder.name}')">✏️</button>
-                                ${isEmpty ? `<button class="folder-action-btn del" title="Delete Empty Folder" onclick="deleteFolder(event, '${folder.id}')">🗑️</button>` : ''}
+                let childFoldersHtml = '';
+                node.folders.forEach(child => {
+                    const childHtml = renderNode(child);
+                    if (childHtml) childFoldersHtml += childHtml;
+                });
+
+                let childFilesHtml = '';
+                node.files.forEach(f => {
+                    if (!filter || (f.filename || '').toLowerCase().includes(searchLower)) {
+                        childFilesHtml += createNoteCard(f);
+                    }
+                });
+
+                // If filtering and this branch has nothing, hide it
+                if (filter && !childFilesHtml && !childFoldersHtml && !(node.name && node.name.toLowerCase().includes(searchLower))) {
+                    return '';
+                }
+
+                const isEmpty = !childFilesHtml && !childFoldersHtml;
+
+                if (!isRoot) {
+                    html += `
+                    <div class="folder-group ${isCollapsed}" id="folder-group-${node.id}">
+                        <div class="folder-header" onclick="toggleFolder('${node.id}')">
+                            <span class="folder-icon">▼</span>
+                            <span class="folder-name" title="${node.name}">📁 ${node.name}</span>
+                            <div class="folder-right">
+                                <span class="folder-meta">${node.files.length + node.folders.length} item</span>
+                                <div class="folder-actions">
+                                    <button class="folder-action-btn" title="New File" onclick="createFileInFolder(event, '${node.id}')">📄</button>
+                                    <button class="folder-action-btn" title="New Subfolder" onclick="createSubfolder(event, '${node.id}')">📁</button>
+                                    <button class="folder-action-btn" title="Rename" onclick="renameFolder(event, '${node.id}', '${node.name}')">✏️</button>
+                                    <button class="folder-action-btn" title="Move" onclick="moveItem(event, '${node.id}', 'folder')">✂️</button>
+                                    ${isEmpty ? `<button class="folder-action-btn del" title="Delete Folder" onclick="deleteFolder(event, '${node.id}')">🗑️</button>` : ''}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="folder-contents">`;
-                
-                filesByFolder[folder.id].forEach(f => html += createNoteCard(f));
-                if (isEmpty) html += `<div style="font-size:0.75rem; color:var(--text-muted); padding: 5px; font-style: italic;">Empty Folder</div>`;
-                
-                html += `</div>`;
-                groupDiv.innerHTML = html; 
-                els.notesList.appendChild(groupDiv);
-            });
-
-            if (filesByFolder['main_workspace'].length > 0) {
-                const rootDiv = document.createElement('div'); 
-                rootDiv.style.marginTop = '16px';
-                
-                rootDiv.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px; padding-left: 8px; font-weight: 600; letter-spacing: 0.5px;">
-                        <span>/ ROOT WORKSPACE</span>
-                        <span>${filesByFolder['main_workspace'].length} items</span>
+                        <div class="folder-contents">
+                            ${childFoldersHtml}
+                            ${childFilesHtml}
+                            ${isEmpty ? `<div style="font-size:0.7rem; color:var(--text-muted); padding: 5px; font-style: italic;">Empty</div>` : ''}
+                        </div>
                     </div>`;
-                    
-                filesByFolder['main_workspace'].forEach(f => rootDiv.innerHTML += createNoteCard(f));
-                els.notesList.appendChild(rootDiv);
+                } else {
+                    html += `
+                        <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px; padding-left: 8px; font-weight: 600; letter-spacing: 0.5px;">
+                            <span>/ ROOT WORKSPACE</span>
+                            <span>${node.files.length + node.folders.length} items</span>
+                        </div>
+                        ${childFoldersHtml}
+                        ${childFilesHtml}
+                    `;
+                }
+                return html;
             }
+
+            els.notesList.innerHTML = renderNode(state.rootTree, true);
             attachCardEvents();
         }
 
@@ -869,7 +871,7 @@
                     <div class="note-icon ${icon.c}">${icon.i}</div>
                     <div class="note-info">
                         <div class="note-info-top">
-                            <h3>${fn}</h3>
+                            <h3 title="${fn}">${fn}</h3>
                             <span class="note-size">${sizeStr}</span>
                         </div>
                     </div>
@@ -889,6 +891,119 @@
                 };
             });
         }
+
+        // --- File Explorer / Workspace Manager ---
+        function renderFileManager() {
+            const dirId = state.currentFmDir;
+            const dirNode = state.folderMap[dirId];
+            if (!dirNode) { state.currentFmDir = 'main_workspace'; return renderFileManager(); }
+
+            // Render Breadcrumbs
+            const crumbs = [];
+            let curr = dirNode;
+            while (curr) {
+                crumbs.unshift({id: curr.id, name: curr.id === 'main_workspace' ? 'Root' : curr.name});
+                curr = curr.parentId && state.folderMap[curr.parentId] ? state.folderMap[curr.parentId] : (curr.id !== 'main_workspace' ? state.folderMap['main_workspace'] : null);
+            }
+
+            const bcContainer = document.getElementById('fm-breadcrumb');
+            bcContainer.innerHTML = crumbs.map((c, i) => `
+                <span class="fm-crumb" onclick="window.fmNavigate('${c.id}')">${c.name}</span>
+                ${i < crumbs.length - 1 ? '<span class="fm-crumb separator">/</span>' : ''}
+            `).join('');
+
+            // Render Body
+            const body = document.getElementById('fm-body');
+            body.innerHTML = '';
+
+            // Back button if not root
+            if (dirId !== 'main_workspace') {
+                const pId = dirNode.parentId || 'main_workspace';
+                body.innerHTML += `
+                    <div class="fm-item" onclick="window.fmNavigate('${pId}')">
+                        <div class="fm-icon">⬆️</div>
+                        <div class="fm-name">.. (Go Back)</div>
+                    </div>
+                `;
+            }
+
+            dirNode.folders.forEach(f => {
+                body.innerHTML += `
+                    <div class="fm-item" onclick="window.fmNavigate('${f.id}')">
+                        <div class="fm-item-actions">
+                            <button class="fm-btn" title="Move" onclick="moveItem(event, '${f.id}', 'folder')">✂️</button>
+                            <button class="fm-btn" style="color:var(--danger)" title="Delete" onclick="deleteFolder(event, '${f.id}')">🗑️</button>
+                        </div>
+                        <div class="fm-icon">📁</div>
+                        <div class="fm-name" title="${f.name}">${f.name}</div>
+                    </div>
+                `;
+            });
+
+            dirNode.files.forEach(f => {
+                const icon = UI.getIcon(f.filename || 'Untitled').i;
+                body.innerHTML += `
+                    <div class="fm-item" onclick="window.fmOpenFile('${f.id}')">
+                        <div class="fm-item-actions">
+                            <button class="fm-btn" title="Move" onclick="moveItem(event, '${f.id}', 'file')">✂️</button>
+                            <button class="fm-btn" style="color:var(--danger)" title="Delete" onclick="window.fmDeleteFile(event, '${f.id}')">🗑️</button>
+                        </div>
+                        <div class="fm-icon">${icon}</div>
+                        <div class="fm-name" title="${f.filename}">${f.filename}</div>
+                        <div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">${UI.formatBytes(f._computedSize)}</div>
+                    </div>
+                `;
+            });
+        }
+
+        window.fmNavigate = (id) => { state.currentFmDir = id; renderFileManager(); };
+        window.fmOpenFile = async (id) => {
+            document.getElementById('fm-overlay').style.display = 'none';
+            if (!state.isDirty || await Dialog.confirm("Discard unsaved changes?")) await openFile(id);
+        };
+        window.fmDeleteFile = async (e, id) => {
+            e.stopPropagation();
+            if(await Dialog.confirm(`Delete file permanently?`)) { 
+                await DB.deleteFile(id); await fetchDatabase(); 
+                if (state.currentId === id) await createNewFile();
+            }
+        };
+
+        document.getElementById('btn-manage').onclick = () => {
+            state.currentFmDir = 'main_workspace';
+            renderFileManager();
+            document.getElementById('fm-overlay').style.display = 'flex';
+        };
+
+
+        // --- Relocation Engine (Move) ---
+        window.moveItem = async (e, id, type) => {
+            e.stopPropagation();
+            const paths = getAllPathsForSelect(type === 'folder' ? id : null);
+            const targetParentId = await Dialog.select(`Move ${type === 'folder' ? 'Folder' : 'File'} To:`, paths);
+            
+            if (targetParentId) {
+                if (type === 'folder') {
+                    const folder = state.folders.find(f => f.id === id);
+                    if (folder && folder.parentId !== targetParentId) {
+                        folder.parentId = targetParentId;
+                        await DB.saveFolder(folder);
+                        await fetchDatabase();
+                    }
+                } else {
+                    const file = state.notes.find(f => f.id === id);
+                    if (file && file.folderId !== targetParentId) {
+                        file.folderId = targetParentId;
+                        await DB.saveFile(file);
+                        
+                        // If current file moved, update select
+                        if (state.currentId === id) els.folderSelect.value = targetParentId;
+                        
+                        await fetchDatabase();
+                    }
+                }
+            }
+        };
 
         // --- File & Folder Operations ---
         window.toggleFolder = (folderId) => {
@@ -915,6 +1030,10 @@
 
         window.deleteFolder = async (e, id) => {
             e.stopPropagation();
+            const node = state.folderMap[id];
+            if (node.files.length > 0 || node.folders.length > 0) {
+                return Dialog.alert("Cannot delete! Folder is not empty. Move or delete contents first.");
+            }
             if (await Dialog.confirm("Delete this empty folder permanently?")) {
                 await DB.deleteFolder(id); 
                 state.folders = state.folders.filter(f => f.id !== id);
@@ -932,10 +1051,22 @@
             renderSidebar(document.getElementById('search-input').value); 
         };
 
-        async function createNewFolder() {
-            const name = await Dialog.prompt("New Folder Name", "e.g., Components");
+        window.createSubfolder = async (e, parentId) => {
+            e.stopPropagation();
+            const name = await Dialog.prompt("New Subfolder Name", "e.g., Assets");
             if (name) {
-                const newFolder = { id: 'f_' + Date.now(), name: name, createdAt: Date.now() };
+                const newFolder = { id: 'f_' + Date.now(), name: name, parentId: parentId, createdAt: Date.now() };
+                await DB.saveFolder(newFolder); 
+                state.expandedFolders.add(parentId);
+                state.expandedFolders.add(newFolder.id); 
+                await fetchDatabase();
+            }
+        }
+
+        async function createNewFolder() {
+            const name = await Dialog.prompt("New Root Folder Name", "e.g., Components");
+            if (name) {
+                const newFolder = { id: 'f_' + Date.now(), name: name, parentId: 'main_workspace', createdAt: Date.now() };
                 await DB.saveFolder(newFolder); 
                 state.expandedFolders.add(newFolder.id); 
                 await fetchDatabase();
@@ -999,7 +1130,7 @@
             els.editor.value = file.content || ''; 
             els.filenameInput.value = file.filename; 
             
-            const isFolderValid = file.folderId && state.folders.find(f => f.id === file.folderId);
+            const isFolderValid = file.folderId && state.folderMap[file.folderId];
             els.folderSelect.value = isFolderValid ? file.folderId : 'main_workspace';
             
             UI.setDirty(false); 
@@ -1314,7 +1445,7 @@
             let isResizing = false; 
             document.getElementById('resizer').onmousedown = () => isResizing = true;
             document.onmousemove = (e) => { 
-                if (isResizing && e.clientX > 200 && e.clientX < 500 && window.innerWidth > 768) {
+                if (isResizing && e.clientX > 250 && e.clientX < 600 && window.innerWidth > 768) {
                     document.documentElement.style.setProperty('--sidebar-width', `${e.clientX}px`); 
                 }
             };
@@ -1327,6 +1458,8 @@
                 if (e.key === 'Escape') { 
                     if(document.getElementById('custom-dialog-overlay').style.display === 'flex') document.getElementById('dialog-btn-cancel').click(); 
                     else if(document.getElementById('prompt-dialog-overlay').style.display === 'flex') document.getElementById('prompt-btn-cancel').click(); 
+                    else if(document.getElementById('select-dialog-overlay').style.display === 'flex') document.getElementById('select-btn-cancel').click(); 
+                    else if(document.getElementById('fm-overlay').style.display === 'flex') document.getElementById('fm-overlay').style.display = 'none';
                     else if (els.cmdPalette.style.display === 'flex') togglePalette(); 
                 }
             });
@@ -1352,8 +1485,9 @@
                 const cmds = [ 
                     { n: 'Toggle Split View', a: () => document.getElementById('btn-split').click() }, 
                     { n: 'Toggle Terminal', a: () => document.getElementById('btn-console').click() }, 
+                    { n: 'Open File Manager', a: () => document.getElementById('btn-manage').click() }, 
                     { n: 'Export Workspace Backup', a: () => document.getElementById('btn-backup').click() }, 
-                    { n: 'Create New Folder', a: createNewFolder }, 
+                    { n: 'Create New Root Folder', a: createNewFolder }, 
                     { n: 'Cycle Editor Theme', a: () => document.getElementById('btn-theme').click() }, 
                     { n: 'Clone Current File', a: duplicateFile } 
                 ];
@@ -1366,7 +1500,8 @@
             } else { 
                 state.notes.filter(n => (n.filename || '').toLowerCase().includes(q)).forEach(f => { 
                     const d = document.createElement('div'); d.className = 'cmd-item'; 
-                    d.innerHTML = `<span>📄 ${f.filename || 'Untitled'}</span>`; 
+                    const path = getFolderPath(f.folderId);
+                    d.innerHTML = `<span style="flex-grow:1;">📄 ${f.filename || 'Untitled'}</span> <span style="font-size:0.7rem; color:var(--text-muted);">${path}</span>`; 
                     d.onclick = async () => { 
                         if(!state.isDirty || await Dialog.confirm("Discard unsaved changes?")) openFile(f.id); 
                         togglePalette(); 
@@ -1387,12 +1522,9 @@
                 if (state.notes.length > 0) await openFile(state.notes[0].id); 
                 else await createNewFile(); 
                 
-                // --- AUTOSAVE IMPLEMENTATION ---
                 setInterval(() => {
-                    if (state.isDirty) {
-                        saveFile(true);
-                    }
-                }, 60000); // 60,000 ms = 1 minute
+                    if (state.isDirty) saveFile(true);
+                }, 60000); // 60s Autosave
                 
             } catch (error) { 
                 console.error("Boot Error:", error); 
