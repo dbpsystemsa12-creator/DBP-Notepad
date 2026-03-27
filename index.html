@@ -225,8 +225,8 @@
            ========================================= */
         .workspace-core { flex-grow: 1; display: flex; flex-direction: column; background: rgba(0,0,0,0.2); overflow: hidden; }
         .split-container { flex-grow: 1; display: flex; overflow: hidden; }
-        .editor-wrapper, .preview-wrapper { display: flex; flex-grow: 1; width: 100%; position: relative; }
-        .preview-wrapper { display: none; background: #fff; }
+        .editor-wrapper { display: flex; flex-grow: 1; width: 100%; position: relative; }
+        .preview-wrapper { display: none; background: #fff; flex-grow: 1; width: 100%; position: relative; }
         .split-mode .editor-wrapper { width: 50%; border-right: 1px solid var(--glass-border); }
         .split-mode .preview-wrapper { width: 50%; display: flex; }
 
@@ -238,6 +238,35 @@
         #editor::placeholder { color: rgba(255,255,255,0.2); }
         #preview-frame { width: 100%; height: 100%; border: none; background: #fff; }
         #preview-text { display: none; width: 100%; height: 100%; padding: 30px; overflow-y: auto; background: #0d1117; color: #c9d1d9; font-size: var(--editor-font-size); font-family: var(--font-mono); line-height: 1.6; }
+
+        /* =========================================
+           FIND & REPLACE PANEL (NEW)
+           ========================================= */
+        #find-replace-panel {
+            position: absolute; top: 10px; right: 20px;
+            background: rgba(15, 15, 20, 0.95);
+            border: 1px solid var(--glass-border); border-bottom: 2px solid var(--accent-main);
+            border-radius: var(--radius-md); padding: 12px;
+            display: none; flex-direction: column; gap: 8px;
+            z-index: 100; box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+            backdrop-filter: var(--glass-blur); width: 320px;
+        }
+        .fr-row { display: flex; gap: 8px; align-items: center; }
+        .fr-input {
+            flex-grow: 1; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border);
+            color: var(--text-primary); padding: 8px 10px; border-radius: var(--radius-sm);
+            font-family: var(--font-sans); font-size: 0.85rem; outline: none; width: 100%;
+        }
+        .fr-input:focus { border-color: var(--accent-main); }
+        .fr-btn {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-secondary); cursor: pointer; padding: 6px 10px;
+            border-radius: var(--radius-sm); font-size: 0.8rem; transition: 0.2s; white-space: nowrap;
+        }
+        .fr-btn:hover { background: rgba(0,210,255,0.1); color: var(--text-primary); border-color: rgba(0,210,255,0.3); }
+        .fr-close { cursor: pointer; color: var(--text-muted); padding: 0 4px; font-size: 1.1rem; }
+        .fr-close:hover { color: var(--danger); }
+        .fr-stats { font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); min-width: 40px; text-align: right; }
 
         /* =========================================
            TERMINAL / CONSOLE
@@ -347,6 +376,7 @@
             .status-bar .status-left span:nth-child(2), .status-bar .status-left span:nth-child(3) { display: none; }
             .fm-window { width: 100vw; height: 100vh; border-radius: 0; border: none;}
             .fm-sidebar { display: none; }
+            #find-replace-panel { width: 90%; right: 5%; top: 5%; }
         }
     </style>
 </head>
@@ -496,6 +526,21 @@
             <div class="workspace-core">
                 <div class="split-container" id="split-container">
                     <div class="editor-wrapper" id="editor-wrapper">
+                        <div id="find-replace-panel">
+                            <div class="fr-row">
+                                <input type="text" id="fr-find-in" class="fr-input" placeholder="Find text...">
+                                <span id="fr-stats" class="fr-stats">0/0</span>
+                                <button id="fr-prev" class="fr-btn" title="Previous (Shift+Enter)">↑</button>
+                                <button id="fr-next" class="fr-btn" title="Next (Enter)">↓</button>
+                                <span id="fr-close" class="fr-close" title="Close (Esc)">✕</span>
+                            </div>
+                            <div class="fr-row" id="fr-replace-row" style="display: none;">
+                                <input type="text" id="fr-replace-in" class="fr-input" placeholder="Replace with...">
+                                <button id="fr-replace" class="fr-btn">Replace</button>
+                                <button id="fr-replace-all" class="fr-btn">All</button>
+                            </div>
+                        </div>
+
                         <div class="line-numbers" id="line-numbers"></div>
                         <textarea id="editor" spellcheck="false" placeholder="// Start coding... Try '!html' or 'clg' + Tab"></textarea>
                     </div>
@@ -567,6 +612,8 @@
             fontSize: 14, isDirty: false, isWrapped: false, isSplit: false, isTerminalOpen: false 
         };
 
+        const frState = { matches: [], currentMatch: -1, isReplaceMode: false };
+
         const els = {
             editor: document.getElementById('editor'), 
             editorWrapper: document.getElementById('editor-wrapper'),
@@ -584,7 +631,13 @@
             cmdResults: document.getElementById('cmd-results'),
             fileImport: document.getElementById('file-import'),
             fileRestore: document.getElementById('file-restore'),
-            workspaceTotal: document.getElementById('workspace-total-size')
+            workspaceTotal: document.getElementById('workspace-total-size'),
+            // Find & Replace Specific elements
+            frPanel: document.getElementById('find-replace-panel'),
+            frFindIn: document.getElementById('fr-find-in'),
+            frReplaceIn: document.getElementById('fr-replace-in'),
+            frReplaceRow: document.getElementById('fr-replace-row'),
+            frStats: document.getElementById('fr-stats')
         };
 
         // ==========================================
@@ -734,26 +787,21 @@
             const root = { id: 'main_workspace', name: 'Root Workspace', files: [], folders: [], _size: 0 };
             const map = { 'main_workspace': root };
             
-            // Initialize Folders
             state.folders.forEach(f => {
                 map[f.id] = { ...f, files: [], folders: [], _size: 0 };
             });
 
-            // Connect Folders
             state.folders.forEach(f => {
-                // Backward compatibility: If no parentId, map to main_workspace
                 const pId = f.parentId && map[f.parentId] ? f.parentId : 'main_workspace';
                 map[pId].folders.push(map[f.id]);
             });
 
-            // Connect Files
             state.notes.forEach(f => {
                 const fId = f.folderId && map[f.folderId] ? f.folderId : 'main_workspace';
                 const size = new Blob([f.content || '']).size;
                 f._computedSize = size;
                 map[fId].files.push(f);
                 
-                // Bubble up size
                 let curr = map[fId];
                 while (curr) {
                     curr._size += size;
@@ -776,7 +824,7 @@
         function getAllPathsForSelect(excludeId = null) {
             const paths = [];
             const traverse = (node) => {
-                if (node.id === excludeId) return; // Prevent moving a folder into itself
+                if (node.id === excludeId) return;
                 paths.push({ id: node.id, name: getFolderPath(node.id) });
                 node.folders.forEach(traverse);
             };
@@ -821,12 +869,10 @@
             els.notesList.innerHTML = '';
             const searchLower = filter.toLowerCase();
 
-            // Render function for recursion
             function renderNode(node, isRoot = false) {
                 let html = '';
                 const isCollapsed = state.expandedFolders.has(node.id) ? '' : 'collapsed';
                 
-                // Filter logic
                 const matchesSearch = node.files.some(f => (f.filename || '').toLowerCase().includes(searchLower)) || 
                                       node.folders.some(f => f.name.toLowerCase().includes(searchLower));
                 
@@ -843,7 +889,6 @@
                     }
                 });
 
-                // If filtering and this branch has nothing, hide it
                 if (filter && !childFilesHtml && !childFoldersHtml && !(node.name && node.name.toLowerCase().includes(searchLower))) {
                     return '';
                 }
@@ -928,7 +973,6 @@
             const dirId = state.currentFmDir || 'main_workspace';
             const dirNode = state.folderMap[dirId] || state.folderMap['main_workspace'];
             
-            // 1. Render Left Tree
             function renderFmTree(node, depth = 0) {
                 let html = '';
                 const isSelected = node.id === dirId ? 'active' : '';
@@ -939,7 +983,6 @@
             const fmTreeEl = document.getElementById('fm-tree');
             if(fmTreeEl) fmTreeEl.innerHTML = renderFmTree(state.rootTree);
 
-            // 2. Render Breadcrumbs
             const crumbs = [];
             let curr = dirNode;
             while (curr) {
@@ -955,7 +998,6 @@
                 `).join('');
             }
 
-            // 3. Up Button
             const upBtn = document.getElementById('fm-up-btn');
             if(upBtn) {
                 if(dirId === 'main_workspace') {
@@ -967,7 +1009,6 @@
                 }
             }
 
-            // 4. Render Grid Body
             const body = document.getElementById('fm-body');
             if(!body) return;
             body.innerHTML = '';
@@ -999,13 +1040,6 @@
             if (!state.isDirty || await Dialog.confirm("Discard unsaved changes?")) await openFile(id);
         };
 
-        document.getElementById('btn-manage').onclick = () => {
-            state.currentFmDir = 'main_workspace';
-            document.getElementById('fm-overlay').style.display = 'flex';
-            renderFileManager();
-        };
-
-
         // --- Relocation Engine (Move) ---
         window.moveItem = async (e, id, type) => {
             e.stopPropagation();
@@ -1025,10 +1059,7 @@
                     if (file && file.folderId !== targetParentId) {
                         file.folderId = targetParentId;
                         await DB.saveFile(file);
-                        
-                        // If current file moved, update select
                         if (state.currentId === id) els.folderSelect.value = targetParentId;
-                        
                         await fetchDatabase();
                     }
                 }
@@ -1103,7 +1134,7 @@
                 await fetchDatabase();
             }
         }
-        window.createNewFolder = createNewFolder; // Expose globally for HTML buttons
+        window.createNewFolder = createNewFolder; 
 
         // --- Editor Logic ---
         function autoDetectExtension(content) {
@@ -1169,6 +1200,9 @@
             updateMetrics(); 
             updatePreview(); 
             renderSidebar(document.getElementById('search-input').value);
+            
+            // Clear Find/Replace state on file load
+            frState.matches = []; updateFRStats();
         }
 
         async function createNewFile() { 
@@ -1206,6 +1240,118 @@
                 await openFile(newFile.id);
             }
         }
+
+        // --- Find & Replace Logic (NEW) ---
+        function executeFind(query) {
+            if (!query) { frState.matches = []; updateFRStats(); return; }
+            const text = els.editor.value;
+            const lowerText = text.toLowerCase();
+            const lowerQuery = query.toLowerCase();
+            let indices = [];
+            let startIndex = 0;
+            let index;
+            while ((index = lowerText.indexOf(lowerQuery, startIndex)) > -1) {
+                indices.push(index);
+                startIndex = index + lowerQuery.length;
+            }
+            frState.matches = indices;
+            if (indices.length > 0) {
+                frState.currentMatch = 0;
+                focusMatch();
+            } else {
+                frState.currentMatch = -1;
+                updateFRStats();
+            }
+        }
+
+        function focusMatch() {
+            if (frState.currentMatch < 0 || frState.matches.length === 0) return;
+            const start = frState.matches[frState.currentMatch];
+            const end = start + els.frFindIn.value.length;
+            els.editor.focus();
+            els.editor.setSelectionRange(start, end);
+            updateFRStats();
+        }
+
+        function nextMatch() {
+            if (frState.matches.length === 0) return;
+            frState.currentMatch = (frState.currentMatch + 1) % frState.matches.length;
+            focusMatch();
+        }
+
+        function prevMatch() {
+            if (frState.matches.length === 0) return;
+            frState.currentMatch = (frState.currentMatch - 1 + frState.matches.length) % frState.matches.length;
+            focusMatch();
+        }
+
+        function updateFRStats() {
+            els.frStats.innerText = frState.matches.length > 0 ? `${frState.currentMatch + 1}/${frState.matches.length}` : '0/0';
+        }
+
+        function toggleFindReplace(mode) {
+            if (els.frPanel.style.display === 'flex' && mode === 'find' && !frState.isReplaceMode) {
+                els.frFindIn.focus();
+                return;
+            }
+            frState.isReplaceMode = (mode === 'replace');
+            els.frReplaceRow.style.display = frState.isReplaceMode ? 'flex' : 'none';
+            els.frPanel.style.display = 'flex';
+
+            const selection = els.editor.value.substring(els.editor.selectionStart, els.editor.selectionEnd);
+            if (selection && !selection.includes('\n')) {
+                els.frFindIn.value = selection;
+            }
+            els.frFindIn.focus();
+            els.frFindIn.select();
+            executeFind(els.frFindIn.value);
+        }
+
+        function replaceCurrent() {
+            if (frState.currentMatch < 0) return;
+            const findStr = els.frFindIn.value;
+            const repStr = els.frReplaceIn.value;
+
+            const start = els.editor.selectionStart;
+            const end = els.editor.selectionEnd;
+            const selectedText = els.editor.value.substring(start, end);
+
+            if (selectedText.toLowerCase() === findStr.toLowerCase()) {
+                els.editor.setRangeText(repStr, start, end, "end");
+                UI.setDirty(true);
+                updateMetrics();
+                executeFind(findStr); // Re-index after modifying
+            } else {
+                nextMatch();
+            }
+        }
+
+        function replaceAllMatches() {
+            const findStr = els.frFindIn.value;
+            const repStr = els.frReplaceIn.value;
+            if (!findStr) return;
+            
+            const regex = new RegExp(findStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+            els.editor.value = els.editor.value.replace(regex, repStr);
+            UI.setDirty(true);
+            updateMetrics();
+            executeFind(findStr);
+        }
+
+        // Hook up FR UI Events
+        els.frFindIn.addEventListener('input', (e) => executeFind(e.target.value));
+        document.getElementById('fr-next').onclick = nextMatch;
+        document.getElementById('fr-prev').onclick = prevMatch;
+        document.getElementById('fr-replace').onclick = replaceCurrent;
+        document.getElementById('fr-replace-all').onclick = replaceAllMatches;
+        document.getElementById('fr-close').onclick = () => { els.frPanel.style.display = 'none'; els.editor.focus(); };
+        
+        els.frFindIn.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); e.shiftKey ? prevMatch() : nextMatch(); }
+        });
+        els.frReplaceIn.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); replaceCurrent(); }
+        });
 
         // --- Editor UI Updates ---
         function updateMetrics() {
@@ -1314,17 +1460,15 @@
         }
 
         // ==========================================
-        // 5. EVENT LISTENERS
+        // 5. EVENT LISTENERS & HOTKEYS
         // ==========================================
         function setupEvents() {
-            // Editor Input
             els.editor.addEventListener('input', () => { UI.setDirty(true); updateMetrics(); });
             els.editor.addEventListener('scroll', () => els.lineNumbers.scrollTop = els.editor.scrollTop);
             ['keyup', 'click'].forEach(e => els.editor.addEventListener(e, updateMetrics));
             els.filenameInput.addEventListener('input', () => UI.setDirty(true));
             els.folderSelect.addEventListener('change', () => UI.setDirty(true)); 
             
-            // Toolbar Actions
             document.getElementById('btn-new').onclick = createNewFile; 
             document.getElementById('btn-save').onclick = () => saveFile(false); 
             document.getElementById('btn-duplicate').onclick = duplicateFile;
@@ -1356,7 +1500,7 @@
                 }
             };
 
-            // Import / Export
+            // Import / Export / Backup
             document.getElementById('btn-import').onclick = async () => { 
                 if(state.isDirty && !(await Dialog.confirm("Unsaved changes. Discard?"))) return; 
                 els.fileImport.click(); 
@@ -1390,7 +1534,6 @@
                 document.body.appendChild(a); a.click(); document.body.removeChild(a);
             };
             
-            // Backup / Restore
             document.getElementById('btn-backup').onclick = async () => { 
                 const data = await DB.getAll(); 
                 const a = document.createElement('a'); 
@@ -1464,6 +1607,12 @@
                 document.getElementById('btn-console').classList.toggle('active', state.isTerminalOpen); 
             };
 
+            document.getElementById('btn-manage').onclick = () => {
+                state.currentFmDir = 'main_workspace';
+                document.getElementById('fm-overlay').style.display = 'flex';
+                renderFileManager();
+            };
+
             // Font Sizing
             const applyFontSize = () => { document.documentElement.style.setProperty('--editor-font-size', `${state.fontSize}px`); updateMetrics(); };
             document.getElementById('btn-zoom-in').onclick = () => { if (state.fontSize < 40) { state.fontSize += 2; applyFontSize(); }};
@@ -1488,16 +1637,26 @@
                 document.body.classList.remove('is-resizing');
             };
             
-            // Global Hotkeys
+            // === GLOBAL HOTKEYS ===
             document.addEventListener('keydown', (e) => { 
-                if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveFile(false); } 
-                if ((e.ctrlKey || e.metaKey) && e.key === 'p') { e.preventDefault(); togglePalette(); } 
+                const cmd = e.ctrlKey || e.metaKey;
+                
+                if (cmd && e.key.toLowerCase() === 's') { e.preventDefault(); saveFile(false); } 
+                if (cmd && e.key.toLowerCase() === 'p') { e.preventDefault(); togglePalette(); } 
+                if (cmd && e.key.toLowerCase() === 'f') { e.preventDefault(); toggleFindReplace('find'); }
+                if (cmd && e.key.toLowerCase() === 'h') { e.preventDefault(); toggleFindReplace('replace'); }
+                if (cmd && e.key.toLowerCase() === 'n') { e.preventDefault(); document.getElementById('btn-new').click(); }
+                if (cmd && e.key.toLowerCase() === 'o') { e.preventDefault(); document.getElementById('btn-manage').click(); }
+                if (cmd && e.key.toLowerCase() === 'b') { e.preventDefault(); document.getElementById('btn-split').click(); }
+                if (cmd && e.key === '`') { e.preventDefault(); document.getElementById('btn-console').click(); }
+
                 if (e.key === 'Escape') { 
                     if(document.getElementById('custom-dialog-overlay').style.display === 'flex') document.getElementById('dialog-btn-cancel').click(); 
                     else if(document.getElementById('prompt-dialog-overlay').style.display === 'flex') document.getElementById('prompt-btn-cancel').click(); 
                     else if(document.getElementById('select-dialog-overlay').style.display === 'flex') document.getElementById('select-btn-cancel').click(); 
                     else if(document.getElementById('fm-overlay').style.display === 'flex') document.getElementById('fm-overlay').style.display = 'none';
-                    else if (els.cmdPalette.style.display === 'flex') togglePalette(); 
+                    else if(els.frPanel.style.display === 'flex') document.getElementById('fr-close').click();
+                    else if(els.cmdPalette.style.display === 'flex') togglePalette(); 
                 }
             });
             window.onbeforeunload = () => state.isDirty ? "You have unsaved changes!" : null;
